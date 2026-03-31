@@ -220,6 +220,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   </div>
   <button class="btn-p" onclick="saveSetup()">Opslaan &amp; Starten →</button>
   <p class="setup-note">API keys worden lokaal opgeslagen op je iPhone.</p>
+  <button onclick="hardReset()" style="margin-top:16px;background:none;border:none;color:var(--danger);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-decoration:underline;opacity:.7">Alles wissen en opnieuw beginnen</button>
 </div>
 
 <!-- APP -->
@@ -392,6 +393,9 @@ let pendingAuthN=null; // which account (1 or 2) is being re-authed
 // INIT
 // ══════════════════════════════════════
 function init(){
+  // Check for ?reset in URL
+  if(location.search.includes('reset')){localStorage.clear();history.replaceState(null,'',location.pathname);location.reload();return;}
+
   // Handle OAuth callback (full-page redirect fallback)
   const hash=location.hash;
   if(hash.includes('access_token=')){
@@ -452,7 +456,19 @@ function startApp(){
   qs('#setup').style.display='none';qs('#app').style.display='flex';
   updateAccountUI();renderFolders();fetchEmails();prefillSettings();
 }
-function saveSetup(){C.ant=qs('#su-ant').value.trim();C.gid=qs('#su-gid').value.trim();C.mid=qs('#su-mid').value.trim();if(!C.ant&&!C.gid){toast('Vul minstens één sleutel in');return;}saveC();startApp();}
+function saveSetup(){
+  const ant=qs('#su-ant').value.trim();
+  const gid=qs('#su-gid').value.trim();
+  const mid=qs('#su-mid').value.trim();
+  if(!ant&&!gid){toast('Vul minimaal de Anthropic key of Google Client ID in');return;}
+  C.ant=ant;C.gid=gid;C.mid=mid;
+  saveC();startApp();
+}
+function hardReset(){
+  if(!confirm('Alle data wissen inclusief accounts en e-mails?'))return;
+  localStorage.clear();
+  location.reload();
+}
 function saveC(){localStorage.setItem('mr_cfg',JSON.stringify(C));}
 function saveFolders(){localStorage.setItem('mr_folders',JSON.stringify(folders));localStorage.setItem('mr_femails',JSON.stringify(folderEmails));}
 function prefillSettings(){if(C.ant)qs('#s-ant').value=C.ant;if(C.gid)qs('#s-gid').value=C.gid;qs('#spam-tog').className='toggle'+(C.spamFilter?' on':'');qs('#ai-tog').className='toggle'+(C.aiEnabled?' on':'');}
