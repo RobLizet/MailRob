@@ -16,7 +16,7 @@
 :root{
   --bg:#080c12;--s1:#0f1520;--s2:#161e2e;--s3:#1e2840;--border:#243050;
   --teal:#00e5c0;--teal-dim:rgba(0,229,192,.12);--text:#dde8f5;--sub:#6a80a0;
-  --danger:#ff5c5c;--warn:#f97316;--g1:#EA4335;--g2:#34A853;
+  --danger:#ff5c5c;--warn:#f97316;--g1:#EA4335;--g2:#34A853;--ol:#0078D4;
   --r:12px;--navh:64px;--headh:54px;
   --st:env(safe-area-inset-top,44px);--sb:env(safe-area-inset-bottom,20px)
 }
@@ -80,6 +80,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .chip{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0}
 .chip-g1{background:rgba(234,67,53,.13);color:var(--g1)}
 .chip-g2{background:rgba(52,168,83,.13);color:var(--g2)}
+.chip-ol{background:rgba(0,120,212,.13);color:var(--ol)}
 .chip-spam{background:rgba(255,92,92,.13);color:var(--danger)}
 
 /* FOLDERS */
@@ -156,6 +157,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .acc-chip{flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);cursor:pointer;text-align:center;font-size:12px;font-weight:500;transition:all .15s;color:var(--sub)}
 .acc-chip.sel-g1{border-color:var(--g1);background:rgba(234,67,53,.1);color:var(--g1)}
 .acc-chip.sel-g2{border-color:var(--g2);background:rgba(52,168,83,.1);color:var(--g2)}
+.acc-chip.sel-ol{border-color:var(--ol);background:rgba(0,120,212,.1);color:var(--ol)}
 .ai-panel{background:var(--s1);border:1px solid var(--teal);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
 .ai-ttl{font-size:13px;font-weight:600;color:var(--teal)}
 .ai-output{font-size:13px;line-height:1.7;display:none;background:var(--bg);padding:12px;border-radius:8px;white-space:pre-wrap;border:1px solid var(--border)}
@@ -174,7 +176,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .set-lbl{font-size:14px;font-weight:500;flex:1}
 .set-sub{font-size:11px;color:var(--sub);margin-top:1px}
 .btn-conn{padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none}
-.bg1{background:var(--g1);color:#fff}.bg2{background:var(--g2);color:#fff}
+.bg1{background:var(--g1);color:#fff}.bg2{background:var(--g2);color:#fff}.bol{background:var(--ol);color:#fff}
 .bdis{background:var(--s3);color:var(--danger);border:1px solid rgba(255,92,92,.25)!important}
 .toggle{width:44px;height:26px;border-radius:13px;background:var(--border);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
 .toggle.on{background:var(--teal)}
@@ -211,6 +213,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <input type="text" class="fi" id="su-gid" placeholder="123456789-abc.apps.googleusercontent.com">
     <p style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5">Één Client ID voor beide Gmail accounts</p>
   </div>
+  <div class="setup-card">
+    <h3>💙 Microsoft Client ID (Outlook)</h3>
+    <input type="text" class="fi" id="su-mid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+    <p style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5">Via portal.azure.com → App registrations (optioneel)</p>
+  </div>
   <button class="btn-p" onclick="saveSetup()">Opslaan &amp; Starten →</button>
   <p class="setup-note">API keys worden lokaal opgeslagen op je iPhone.</p>
 </div>
@@ -241,12 +248,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       <div class="set-sect">
         <div class="set-ttl">Gmail Accounts</div>
         <div class="set-row">
-          <div><div class="set-lbl">📧 Gmail Account 1</div><div class="set-sub" id="g1status">Niet verbonden</div></div>
+          <div>
+            <div class="set-lbl">📧 Hoofdaccount <span style="background:var(--teal);color:#080c12;border-radius:6px;font-size:10px;font-weight:700;padding:2px 7px;margin-left:6px">HOOFD</span></div>
+            <div class="set-sub" id="g1status">Niet verbonden</div>
+          </div>
           <div id="g1btn"><button class="btn-conn bg1" onclick="connectGmail(1)">Verbinden</button></div>
         </div>
         <div class="set-row">
-          <div><div class="set-lbl">📧 Gmail Account 2</div><div class="set-sub" id="g2status">Niet verbonden</div></div>
+          <div><div class="set-lbl">📧 Extra account</div><div class="set-sub" id="g2status">Niet verbonden</div></div>
           <div id="g2btn"><button class="btn-conn bg2" onclick="connectGmail(2)">Verbinden</button></div>
+        </div>
+        <div class="set-row">
+          <div><div class="set-lbl">💙 Outlook</div><div class="set-sub" id="olstatus">Niet verbonden</div></div>
+          <div id="olbtn"><button class="btn-conn bol" onclick="connectOutlook()">Verbinden</button></div>
         </div>
       </div>
       <div class="set-sect">
@@ -258,6 +272,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <div class="set-ttl">API Sleutels bijwerken</div>
         <input type="password" class="set-inp" id="s-ant" placeholder="Anthropic API Key">
         <input type="text" class="set-inp" id="s-gid" placeholder="Google Client ID">
+        <input type="text" class="set-inp" id="s-mid" placeholder="Microsoft Client ID (Outlook)">
         <button class="btn-p" style="margin-top:10px" onclick="saveKeys()">Opslaan</button>
       </div>
       <div class="set-sect">
@@ -352,6 +367,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 // ══════════════════════════════════════
 const REDIRECT=location.origin+location.pathname;
 const GSCOPE='https://mail.google.com/';
+const MS_SCOPE='https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send offline_access';
 const TOKEN_TTL=3500*1000; // ~58 min (tokens last 3600s)
 
 const DEFAULT_FOLDERS=[
@@ -362,9 +378,11 @@ const DEFAULT_FOLDERS=[
   {id:'archief',name:'Archief',       emoji:'📁',color:'#6a80a0'},
 ];
 
-let C={ant:'',gid:'',
+let C={ant:'',gid:'',mid:'',
   g1token:null,g1email:'',g1exp:0,
   g2token:null,g2email:'',g2exp:0,
+  oltoken:null,olemail:'',olexp:0,
+  primaryAccount:'g1',
   spamFilter:true,aiEnabled:true,selAccount:null
 };
 let emails=[],spamList=[],folderEmails={},folders=[],curEmail=null,aiText='',curFolderView=null;
@@ -382,6 +400,7 @@ function init(){
     const expTime=Date.now()+(parseInt(exp||3600)*1000);
     if(st==='g1'){C.g1token=tok;C.g1exp=expTime;saveC();getGEmail(tok,1);}
     if(st==='g2'){C.g2token=tok;C.g2exp=expTime;saveC();getGEmail(tok,2);}
+    if(st==='ol'){C.oltoken=tok;C.olexp=expTime;saveC();getOLEmail(tok);}
     history.replaceState(null,'',location.pathname);
   }
   try{const s=localStorage.getItem('mr_cfg');if(s)Object.assign(C,JSON.parse(s));}catch(e){}
@@ -404,16 +423,15 @@ function checkTokenExpiry(){
   const now=Date.now();
   const g1exp=C.g1token&&C.g1exp&&C.g1exp<now;
   const g2exp=C.g2token&&C.g2exp&&C.g2exp<now;
-  if(g1exp||g2exp){
-    let msg='⚠️ ';
-    if(g1exp&&g2exp) msg+='Beide Gmail sessies verlopen';
-    else if(g1exp)   msg+='Gmail 1 sessie verlopen';
-    else             msg+='Gmail 2 sessie verlopen';
-    qs('#status-msg').textContent=msg;
+  const olexp=C.oltoken&&C.olexp&&C.olexp<now;
+  if(g1exp||g2exp||olexp){
+    const expired=[];
+    if(g1exp){expired.push('Gmail 1');C.g1token=null;}
+    if(g2exp){expired.push('Gmail 2');C.g2token=null;}
+    if(olexp){expired.push('Outlook');C.oltoken=null;}
+    qs('#status-msg').textContent='⚠️ '+expired.join(' & ')+' sessie verlopen';
     qs('#status-bar').classList.add('show');
-    if(g1exp){C.g1token=null;saveC();}
-    if(g2exp){C.g2token=null;saveC();}
-    updateAccountUI();
+    saveC();updateAccountUI();
   } else {
     qs('#status-bar').classList.remove('show');
   }
@@ -434,7 +452,7 @@ function startApp(){
   qs('#setup').style.display='none';qs('#app').style.display='flex';
   updateAccountUI();renderFolders();fetchEmails();prefillSettings();
 }
-function saveSetup(){C.ant=qs('#su-ant').value.trim();C.gid=qs('#su-gid').value.trim();if(!C.ant&&!C.gid){toast('Vul minstens één sleutel in');return;}saveC();startApp();}
+function saveSetup(){C.ant=qs('#su-ant').value.trim();C.gid=qs('#su-gid').value.trim();C.mid=qs('#su-mid').value.trim();if(!C.ant&&!C.gid){toast('Vul minstens één sleutel in');return;}saveC();startApp();}
 function saveC(){localStorage.setItem('mr_cfg',JSON.stringify(C));}
 function saveFolders(){localStorage.setItem('mr_folders',JSON.stringify(folders));localStorage.setItem('mr_femails',JSON.stringify(folderEmails));}
 function prefillSettings(){if(C.ant)qs('#s-ant').value=C.ant;if(C.gid)qs('#s-gid').value=C.gid;qs('#spam-tog').className='toggle'+(C.spamFilter?' on':'');qs('#ai-tog').className='toggle'+(C.aiEnabled?' on':'');}
@@ -459,12 +477,15 @@ function connectGmail(n){
 }
 
 function doAuthLogin(){
-  const n=pendingAuthN||parseInt(localStorage.getItem('mr_pending_auth')||'1');
-  const hint=n===1?C.g1email:C.g2email;
-  const hintParam=hint?`&login_hint=${enc(hint)}`:'&prompt=select_account';
-  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${enc(C.gid)}&redirect_uri=${enc(REDIRECT)}&response_type=token&scope=${enc(GSCOPE)}&state=g${n}${hintParam}&include_granted_scopes=true`;
+  const n=pendingAuthN||localStorage.getItem('mr_pending_auth')||'1';
   closeAuthOverlay();
-  location.href=url; // Full redirect — but token stored properly on return
+  if(n==='ol'){
+    location.href=`https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${enc(C.mid)}&redirect_uri=${enc(REDIRECT)}&response_type=token&scope=${enc(MS_SCOPE)}&state=ol&prompt=select_account`;
+  } else {
+    const hint=n==='1'?C.g1email:C.g2email;
+    const hintParam=hint?`&login_hint=${enc(hint)}`:'&prompt=select_account';
+    location.href=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${enc(C.gid)}&redirect_uri=${enc(REDIRECT)}&response_type=token&scope=${enc(GSCOPE)}&state=g${n}${hintParam}&include_granted_scopes=true`;
+  }
 }
 
 function closeAuthOverlay(){qs('#ov-auth').classList.remove('open');pendingAuthN=null;}
@@ -476,19 +497,43 @@ function disconnectGmail(n){
   saveC();updateAccountUI();renderInbox();updateBadges();checkTokenExpiry();toast(`Gmail ${n} losgekoppeld`);
 }
 
+function connectOutlook(){
+  if(!C.mid){toast('Voer eerst een Microsoft Client ID in');switchTab('settings');return;}
+  pendingAuthN='ol';
+  qs('#auth-title').textContent='Outlook verbinden';
+  qs('#auth-msg').textContent='Koppel je Outlook account aan MailRob.';
+  qs('#auth-steps').innerHTML='Na het inloggen keer je automatisch terug in de app.';
+  qs('#ov-auth').classList.add('open');
+  localStorage.setItem('mr_pending_auth','ol');
+}
+function disconnectOutlook(){
+  if(!confirm('Outlook loskoppelen?'))return;
+  C.oltoken=null;C.olemail='';C.olexp=0;
+  emails=emails.filter(e=>e.src!=='ol');
+  saveC();updateAccountUI();renderInbox();updateBadges();toast('Outlook losgekoppeld');
+}
+async function getOLEmail(tok){
+  try{const r=await fetch('https://graph.microsoft.com/v1.0/me?$select=mail,displayName',{headers:{Authorization:`Bearer ${tok}`}});if(r.ok){const d=await r.json();C.olemail=d.mail||d.userPrincipalName||'';saveC();updateAccountUI();toast('Outlook verbonden ✓');if(qs('#app').style.display!=='none')fetchEmails();}}catch(e){}
+}
 function updateAccountUI(){
-  const expTime=(n)=>n===1?C.g1exp:C.g2exp;
-  const sr=(n,tok,email,sid,bid,cls)=>{
-    const exp=expTime(n);
-    const expStr=tok&&exp?` · verloopt ${new Date(exp).toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'})}`:(!tok&&email?' · verlopen':'');
-    qs('#'+sid).textContent=tok?(email||'Verbonden ✓')+expStr:'Niet verbonden';
+  const fmtExp=(exp)=>exp?` · verloopt ${new Date(exp).toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'})}`:''
+  const sr=(n,tok,email,exp,sid,bid,cls,fn)=>{
+    qs('#'+sid).textContent=tok?(email||'Verbonden ✓')+fmtExp(exp):'Niet verbonden';
     qs('#'+sid).style.color=tok?'var(--teal)':(!tok&&email?'var(--warn)':'');
-    qs('#'+bid).innerHTML=tok
-      ?`<button class="btn-conn bdis" onclick="disconnectGmail(${n})">Verbreken</button>`
-      :`<button class="btn-conn ${cls}" onclick="connectGmail(${n})">${email?'Herverbinden':'Verbinden'}</button>`;
+    qs('#'+bid).innerHTML=tok?`<button class="btn-conn bdis" onclick="${fn}()">Verbreken</button>`:`<button class="btn-conn ${cls}" onclick="${fn==='disconnectOutlook'?'connectOutlook':'connectGmail('+(n)+')'}">${email?'Herverbinden':'Verbinden'}</button>`;
   };
-  sr(1,C.g1token,C.g1email,'g1status','g1btn','bg1');
-  sr(2,C.g2token,C.g2email,'g2status','g2btn','bg2');
+  // Gmail 1
+  qs('#g1status').textContent=C.g1token?(C.g1email||'Verbonden ✓')+fmtExp(C.g1exp):'Niet verbonden';
+  qs('#g1status').style.color=C.g1token?'var(--teal)':(!C.g1token&&C.g1email?'var(--warn)':'');
+  qs('#g1btn').innerHTML=C.g1token?`<button class="btn-conn bdis" onclick="disconnectGmail(1)">Verbreken</button>`:`<button class="btn-conn bg1" onclick="connectGmail(1)">${C.g1email?'Herverbinden':'Verbinden'}</button>`;
+  // Gmail 2
+  qs('#g2status').textContent=C.g2token?(C.g2email||'Verbonden ✓')+fmtExp(C.g2exp):'Niet verbonden';
+  qs('#g2status').style.color=C.g2token?'var(--teal)':(!C.g2token&&C.g2email?'var(--warn)':'');
+  qs('#g2btn').innerHTML=C.g2token?`<button class="btn-conn bdis" onclick="disconnectGmail(2)">Verbreken</button>`:`<button class="btn-conn bg2" onclick="connectGmail(2)">${C.g2email?'Herverbinden':'Verbinden'}</button>`;
+  // Outlook
+  qs('#olstatus').textContent=C.oltoken?(C.olemail||'Verbonden ✓')+fmtExp(C.olexp):'Niet verbonden';
+  qs('#olstatus').style.color=C.oltoken?'var(--teal)':(!C.oltoken&&C.olemail?'var(--warn)':'');
+  qs('#olbtn').innerHTML=C.oltoken?`<button class="btn-conn bdis" onclick="disconnectOutlook()">Verbreken</button>`:`<button class="btn-conn bol" onclick="connectOutlook()">${C.olemail?'Herverbinden':'Verbinden'}</button>`;
 }
 
 // ══════════════════════════════════════
@@ -502,6 +547,7 @@ async function fetchEmails(){
   const fns=[];
   if(C.g1token)fns.push(fetchGmail('g1',C.g1token));
   if(C.g2token)fns.push(fetchGmail('g2',C.g2token));
+  if(C.oltoken)fns.push(fetchOutlook());
   const results=await Promise.allSettled(fns);
   const fresh=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
   const existIds=new Set(emails.map(e=>e.id));
@@ -525,7 +571,23 @@ async function fetchGmail(src,tok){
   }catch(e){console.error(src,e);return[];}
 }
 
-async function gFetch(url,tok,n){
+async function fetchOutlook(){
+  try{
+    const r=await fetch('https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=20&$select=id,subject,from,toRecipients,receivedDateTime,bodyPreview,isRead',{headers:{Authorization:`Bearer ${C.oltoken}`}});
+    if(r.status===401){C.oltoken=null;saveC();updateAccountUI();checkTokenExpiry();return[];}
+    if(!r.ok)return[];
+    const d=await r.json();
+    return(d.value||[]).map(m=>({
+      id:'ol_'+m.id,rawId:m.id,src:'ol',
+      from:m.from?.emailAddress?.name||m.from?.emailAddress?.address||'?',
+      fromE:m.from?.emailAddress?.address||'',
+      to:(m.toRecipients||[]).map(x=>x.emailAddress?.address).join(', '),
+      sub:m.subject||'(geen onderwerp)',prev:m.bodyPreview||'',
+      date:new Date(m.receivedDateTime).getTime(),
+      unread:!m.isRead,spam:false
+    }));
+  }catch(e){console.error('Outlook',e);return[];}
+}
   const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
   if(r.status===401){
     // Token expired — show reconnect bar instead of redirecting
@@ -663,7 +725,7 @@ function avatarColor(e){const c=['#6366f1','#8b5cf6','#ec4899','#ef4444','#f9731
 function fmtDate(ts){const d=new Date(ts),diff=Date.now()-ts;if(diff<60e3)return'nu';if(diff<3600e3)return Math.floor(diff/60e3)+'m';if(diff<86400e3)return d.toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'});if(diff<604800e3)return d.toLocaleDateString('nl',{weekday:'short'});return d.toLocaleDateString('nl',{day:'numeric',month:'short'});}
 function emailCard(e,onclick){
   const col=avatarColor(e.fromE);
-  const sc=e.src==='g1'?'<span class="chip chip-g1">Gmail 1</span>':'<span class="chip chip-g2">Gmail 2</span>';
+  const sc=e.src==='g1'?'<span class="chip chip-g1">Gmail 1</span>':e.src==='g2'?'<span class="chip chip-g2">Gmail 2</span>':'<span class="chip chip-ol">Outlook</span>';
   const sp=e.spam?'<span class="chip chip-spam">Spam</span>':'';
   const sel=selectedIds.has(e.id);
   const clickFn=selectMode?`toggleSelectEmail('${e.id}')`:`${onclick}`;
@@ -718,14 +780,20 @@ async function openEmail(id,fromFolder=false,fid=null){
     <div class="det-body" id="det-body"><div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div></div>`;
   qs('#ov-detail').classList.add('open');
   const n=e.src==='g1'?1:2;
-  const tok=n===1?C.g1token:C.g2token;
+  const tok=e.src==='ol'?C.oltoken:e.src==='g1'?C.g1token:C.g2token;
   let body='',isHtml=false;
   try{
     if(tok){
-      const d=await gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}?format=full`,tok,n);
-      body=d?extractBody(d.payload):e.prev;
-      isHtml=body.includes('<')&&(body.includes('<div')||body.includes('<p')||body.includes('<table'));
-      fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/modify`,{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({removeLabelIds:['UNREAD']})}).catch(()=>{});
+      if(e.src==='ol'){
+        const d=await fetch(`https://graph.microsoft.com/v1.0/me/messages/${e.rawId}?$select=body`,{headers:{Authorization:`Bearer ${tok}`}});
+        if(d.ok){const j=await d.json();body=j.body?.content||e.prev;isHtml=j.body?.contentType==='html';}
+        fetch(`https://graph.microsoft.com/v1.0/me/messages/${e.rawId}`,{method:'PATCH',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({isRead:true})}).catch(()=>{});
+      } else {
+        const d=await gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}?format=full`,tok,n);
+        body=d?extractBody(d.payload):e.prev;
+        isHtml=body.includes('<')&&(body.includes('<div')||body.includes('<p')||body.includes('<table'));
+        fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/modify`,{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({removeLabelIds:['UNREAD']})}).catch(()=>{});
+      }
     }else{body=e.prev;}
   }catch(err){body=e.prev;}
   const el=qs('#det-body');if(!el)return;
@@ -739,9 +807,15 @@ function closeDetail(){qs('#ov-detail').classList.remove('open');curEmail=null;}
 // ══════════════════════════════════════
 // ACTIONS
 // ══════════════════════════════════════
-async function markSpam(){if(!curEmail)return;const e=curEmail;emails=emails.filter(x=>x.id!==e.id);if(!spamList.find(x=>x.id===e.id))spamList.push({...e,spam:true});localStorage.setItem('mr_spam',JSON.stringify(spamList));const tok=e.src==='g1'?C.g1token:C.g2token;if(tok)fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/modify`,{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({addLabelIds:['SPAM'],removeLabelIds:['INBOX']})}).catch(()=>{});closeDetail();renderInbox();renderSpam();updateBadges();toast('Spam gemarkeerd 🚫');}
+async function markSpam(){if(!curEmail)return;const e=curEmail;emails=emails.filter(x=>x.id!==e.id);if(!spamList.find(x=>x.id===e.id))spamList.push({...e,spam:true});localStorage.setItem('mr_spam',JSON.stringify(spamList));
+  if(e.src==='ol'&&C.oltoken)fetch(`https://graph.microsoft.com/v1.0/me/messages/${e.rawId}/move`,{method:'POST',headers:{Authorization:`Bearer ${C.oltoken}`,'Content-Type':'application/json'},body:JSON.stringify({destinationId:'junkemail'})}).catch(()=>{});
+  else{const tok=e.src==='g1'?C.g1token:C.g2token;if(tok)fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/modify`,{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({addLabelIds:['SPAM'],removeLabelIds:['INBOX']})}).catch(()=>{});}
+  closeDetail();renderInbox();renderSpam();updateBadges();toast('Spam gemarkeerd 🚫');}
 function notSpam(){if(!curEmail)return;const e=curEmail;spamList=spamList.filter(x=>x.id!==e.id);localStorage.setItem('mr_spam',JSON.stringify(spamList));emails.push({...e,spam:false});emails.sort((a,b)=>b.date-a.date);closeDetail();renderInbox();renderSpam();updateBadges();toast('Niet spam ✓');}
-async function deleteEmail(){if(!curEmail)return;if(!confirm('E-mail verwijderen?'))return;const e=curEmail;emails=emails.filter(x=>x.id!==e.id);spamList=spamList.filter(x=>x.id!==e.id);folders.forEach(f=>{if(folderEmails[f.id])folderEmails[f.id]=folderEmails[f.id].filter(x=>x.id!==e.id);});localStorage.setItem('mr_spam',JSON.stringify(spamList));saveFolders();const tok=e.src==='g1'?C.g1token:C.g2token;if(tok)fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/trash`,{method:'POST',headers:{Authorization:`Bearer ${tok}`}}).catch(()=>{});closeDetail();renderInbox();renderFolders();renderSpam();updateBadges();toast('Verwijderd 🗑️');}
+async function deleteEmail(){if(!curEmail)return;if(!confirm('E-mail verwijderen?'))return;const e=curEmail;emails=emails.filter(x=>x.id!==e.id);spamList=spamList.filter(x=>x.id!==e.id);folders.forEach(f=>{if(folderEmails[f.id])folderEmails[f.id]=folderEmails[f.id].filter(x=>x.id!==e.id);});localStorage.setItem('mr_spam',JSON.stringify(spamList));saveFolders();
+  if(e.src==='ol'&&C.oltoken)fetch(`https://graph.microsoft.com/v1.0/me/messages/${e.rawId}`,{method:'DELETE',headers:{Authorization:`Bearer ${C.oltoken}`}}).catch(()=>{});
+  else{const tok=e.src==='g1'?C.g1token:C.g2token;if(tok)fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/trash`,{method:'POST',headers:{Authorization:`Bearer ${tok}`}}).catch(()=>{});}
+  closeDetail();renderInbox();renderFolders();renderSpam();updateBadges();toast('Verwijderd 🗑️');}
 function replyEmail(){if(!curEmail)return;closeDetail();openCompose({to:curEmail.fromE,sub:'Re: '+curEmail.sub,src:curEmail.src});}
 
 // ══════════════════════════════════════
@@ -754,6 +828,7 @@ function openCompose(pre={}){
   const row=qs('#acc-row'),accs=[];
   if(C.g1token)accs.push({id:'g1',lbl:`📧 ${C.g1email?C.g1email.split('@')[0]:'Gmail 1'}`,cls:'g1'});
   if(C.g2token)accs.push({id:'g2',lbl:`📧 ${C.g2email?C.g2email.split('@')[0]:'Gmail 2'}`,cls:'g2'});
+  if(C.oltoken)accs.push({id:'ol',lbl:`💙 ${C.olemail?C.olemail.split('@')[0]:'Outlook'}`,cls:'ol'});
   if(!accs.length){row.innerHTML='<span style="font-size:13px;color:var(--danger)">Geen accounts verbonden</span>';C.selAccount=null;}
   else{C.selAccount=pre.src||accs[0].id;row.innerHTML=accs.map(a=>`<div class="acc-chip${C.selAccount===a.id?' sel-'+a.cls:''}" onclick="selAcc('${a.id}','${a.cls}')">${a.lbl}</div>`).join('');}
   qs('#ov-compose').classList.add('open');
@@ -770,9 +845,19 @@ function insertAI(){if(!aiText)return;qs('#c-body').value=aiText;toast('Tekst in
 async function sendEmail(){
   const to=qs('#c-to').value.trim(),sub=qs('#c-sub').value.trim(),body=qs('#c-body').value.trim();
   if(!to){toast('Vul een ontvanger in');return;}if(!sub){toast('Vul een onderwerp in');return;}if(!body){toast('Schrijf een bericht');return;}if(!C.selAccount){toast('Selecteer een account');return;}
-  const tok=C.selAccount==='g1'?C.g1token:C.g2token;if(!tok){toast('Account niet verbonden');return;}
+  const tok=C.selAccount==='g1'?C.g1token:C.selAccount==='g2'?C.g2token:C.oltoken;if(!tok){toast('Account niet verbonden');return;}
   const btn=qs('#send-btn');btn.textContent='Versturen...';btn.disabled=true;
-  try{const raw=[`To: ${to}`,`Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(sub)))}?=`,'Content-Type: text/plain; charset=UTF-8','',body].join('\r\n');const enc2=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({raw:enc2})});if(!r.ok)throw new Error('Verzenden mislukt ('+r.status+')');toast('Verstuurd ✉️');closeCompose();}
+  try{
+    if(C.selAccount==='ol'){
+      const r=await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({message:{subject:sub,body:{contentType:'Text',content:body},toRecipients:[{emailAddress:{address:to}}]}})});
+      if(!r.ok)throw new Error('Outlook verzenden mislukt ('+r.status+')');
+    } else {
+      const raw=[`To: ${to}`,`Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(sub)))}?=`,'Content-Type: text/plain; charset=UTF-8','',body].join('\r\n');
+      const enc2=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({raw:enc2})});
+      if(!r.ok)throw new Error('Gmail verzenden mislukt ('+r.status+')');
+    }
+    toast('Verstuurd ✉️');closeCompose();}
   catch(e){toast('Fout: '+e.message);}finally{btn.textContent='Versturen ↗';btn.disabled=false;}
 }
 
@@ -796,7 +881,7 @@ function switchTab(tab){
   if(tab!=='inbox')cancelSelect();
 }
 function togglePref(k,id){C[k]=!C[k];saveC();qs('#'+id).className='toggle'+(C[k]?' on':'');}
-function saveKeys(){const a=qs('#s-ant').value.trim(),g=qs('#s-gid').value.trim();if(a)C.ant=a;if(g)C.gid=g;saveC();toast('Opgeslagen ✓');}
+function saveKeys(){const a=qs('#s-ant').value.trim(),g=qs('#s-gid').value.trim(),m=qs('#s-mid').value.trim();if(a)C.ant=a;if(g)C.gid=g;if(m)C.mid=m;saveC();toast('Opgeslagen ✓');}
 function clearCache(){if(!confirm('Alle lokale e-maildata wissen?'))return;emails=[];spamList=[];localStorage.removeItem('mr_spam');renderInbox();renderSpam();updateBadges();toast('Cache gewist');}
 
 // ══════════════════════════════════════
