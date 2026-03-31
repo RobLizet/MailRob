@@ -16,7 +16,7 @@
 :root{
   --bg:#080c12;--s1:#0f1520;--s2:#161e2e;--s3:#1e2840;--border:#243050;
   --teal:#00e5c0;--teal-dim:rgba(0,229,192,.12);--text:#dde8f5;--sub:#6a80a0;
-  --danger:#ff5c5c;--g1:#EA4335;--g2:#34A853;
+  --danger:#ff5c5c;--warn:#f97316;--g1:#EA4335;--g2:#34A853;
   --r:12px;--navh:64px;--headh:54px;
   --st:env(safe-area-inset-top,44px);--sb:env(safe-area-inset-bottom,20px)
 }
@@ -45,6 +45,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .tab{display:none}.tab.active{display:block}
 
+/* STATUS BAR */
+#status-bar{display:none;background:rgba(249,115,22,.12);border-bottom:1px solid rgba(249,115,22,.3);padding:8px 14px;font-size:12px;color:var(--warn);gap:8px;align-items:center}
+#status-bar.show{display:flex}
+#status-bar button{background:var(--warn);color:#080c12;border:none;border-radius:6px;padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:auto}
+
 /* MAIL LIST */
 .mail-item{padding:13px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:11px;align-items:flex-start;position:relative;transition:background .12s}
 .mail-item:active{background:var(--s1)}
@@ -63,7 +68,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .chip-g2{background:rgba(52,168,83,.13);color:var(--g2)}
 .chip-spam{background:rgba(255,92,92,.13);color:var(--danger)}
 
-/* FOLDERS TAB */
+/* FOLDERS */
 .folder-list{padding:12px 14px}
 .folder-item{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;cursor:pointer;transition:background .15s}
 .folder-item:active{background:var(--s2)}
@@ -71,10 +76,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .folder-info{flex:1;min-width:0}
 .folder-name{font-size:15px;font-weight:600;font-family:'Syne',sans-serif}
 .folder-count{font-size:12px;color:var(--sub);margin-top:2px}
-.folder-del{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:18px;cursor:pointer;border-radius:6px;transition:color .15s}
+.folder-del{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:18px;cursor:pointer;border-radius:6px}
 .folder-del:active{color:var(--danger)}
-.add-folder-card{background:var(--teal-dim);border:1px dashed var(--teal);border-radius:var(--r);padding:14px;display:flex;gap:10px;align-items:center;cursor:pointer;margin-bottom:10px;transition:background .15s}
-.add-folder-card:active{background:rgba(0,229,192,.2)}
 .add-folder-inp{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;flex:1;transition:border-color .2s}
 .add-folder-inp:focus{border-color:var(--teal)}
 .add-folder-inp::placeholder{color:var(--sub)}
@@ -99,6 +102,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .ov-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;flex:1}
 .ov-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--sb)+16px)}
 
+/* AUTH OVERLAY */
+#ov-auth{background:rgba(8,12,18,.95);z-index:150;align-items:center;justify-content:center;padding:24px}
+#ov-auth.open{display:flex}
+.auth-card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:380px;text-align:center}
+.auth-card h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px}
+.auth-card p{font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:20px}
+.auth-steps{text-align:left;background:var(--bg);border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px;line-height:1.8;color:var(--text)}
+.auth-note{font-size:11px;color:var(--sub);margin-top:12px;line-height:1.5}
+
 /* DETAIL */
 .det-subject{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;padding:16px 14px 12px;line-height:1.4}
 .det-meta{margin:0 14px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:12px}
@@ -112,8 +124,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .act-btn.red{border-color:rgba(255,92,92,.25);color:var(--danger)}
 .act-btn.teal{border-color:var(--teal);color:var(--teal)}
 .det-body{margin:0 14px;font-size:14px;line-height:1.75}
-
-/* MOVE PICKER */
 .move-picker{margin:0 14px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:none}
 .move-picker.open{display:block}
 .move-ttl{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;padding:10px 14px 6px}
@@ -159,7 +169,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .set-inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;margin-top:7px;transition:border-color .2s}
 .set-inp:focus{border-color:var(--teal)}
 
-/* EMPTY / LOADING */
+/* MISC */
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:52px 24px}
 .empty-ico{font-size:42px;opacity:.35}.empty-t{font-size:14px;text-align:center;color:var(--sub)}.empty-s{font-size:12px;text-align:center;color:var(--sub);opacity:.7}
 .spin-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px;color:var(--sub)}
@@ -193,29 +203,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 
 <!-- APP -->
 <div id="app">
+  <div id="status-bar">
+    <span id="status-msg">⚠️ Sessie verlopen</span>
+    <button onclick="reconnectExpired()">Opnieuw verbinden</button>
+  </div>
   <div class="hdr">
     <div class="hdr-title" id="hdr-title">Inbox <span id="unread-badge" style="display:none"></span></div>
-    <div class="hdr-btn" id="hdr-refresh" onclick="refreshEmails()" style="display:flex">⟳</div>
+    <div class="hdr-btn" id="hdr-refresh" onclick="refreshEmails()">⟳</div>
     <div class="hdr-btn" onclick="openCompose()">✏️</div>
   </div>
   <div class="content">
-
-    <!-- INBOX -->
-    <div class="tab active" id="tab-inbox">
-      <div id="inbox-body"><div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div></div>
-    </div>
-
-    <!-- SPAM -->
-    <div class="tab" id="tab-spam">
-      <div id="spam-body"><div class="empty"><div class="empty-ico">🛡️</div><div class="empty-t">Geen spam gevonden</div><div class="empty-s">AI analyseert automatisch</div></div></div>
-    </div>
-
-    <!-- MAPPEN -->
-    <div class="tab" id="tab-folders">
-      <div class="folder-list" id="folder-list"></div>
-    </div>
-
-    <!-- INSTELLINGEN -->
+    <div class="tab active" id="tab-inbox"><div id="inbox-body"><div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div></div></div>
+    <div class="tab" id="tab-spam"><div id="spam-body"><div class="empty"><div class="empty-ico">🛡️</div><div class="empty-t">Geen spam gevonden</div><div class="empty-s">AI analyseert automatisch</div></div></div></div>
+    <div class="tab" id="tab-folders"><div class="folder-list" id="folder-list"></div></div>
     <div class="tab" id="tab-settings">
       <div class="set-sect">
         <div class="set-ttl">Gmail Accounts</div>
@@ -246,8 +246,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       <div class="footer">Made by Rob Borghouts 2026</div>
     </div>
   </div>
-
-  <!-- BOTTOM NAV -->
   <div class="bnav">
     <div class="ni active" data-tab="inbox" onclick="switchTab('inbox')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -268,6 +266,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   </div>
 </div>
 
+<!-- AUTH OVERLAY (shown when token expired, replaces redirect) -->
+<div class="overlay" id="ov-auth">
+  <div class="auth-card">
+    <div style="font-size:48px;margin-bottom:12px">🔐</div>
+    <h2 id="auth-title">Opnieuw inloggen</h2>
+    <p id="auth-msg">Je Gmail sessie is verlopen. Log opnieuw in om door te gaan.</p>
+    <div class="auth-steps" id="auth-steps"></div>
+    <button class="btn-p" id="auth-btn" onclick="doAuthLogin()">Inloggen →</button>
+    <div class="auth-note">Na het inloggen kom je automatisch terug in de app.</div>
+    <div style="margin-top:12px"><button onclick="closeAuthOverlay()" style="background:none;border:none;color:var(--sub);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;text-decoration:underline">Annuleren</button></div>
+  </div>
+</div>
+
 <!-- EMAIL DETAIL -->
 <div class="overlay" id="ov-detail">
   <div class="ov-hdr">
@@ -277,7 +288,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   <div class="ov-scroll" id="det-scroll"></div>
 </div>
 
-<!-- FOLDER VIEW (emails inside a folder) -->
+<!-- FOLDER VIEW -->
 <div class="overlay" id="ov-folder">
   <div class="ov-hdr">
     <div class="ov-back" onclick="closeFolderView()">‹</div>
@@ -315,33 +326,41 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // STATE
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 const REDIRECT=location.origin+location.pathname;
 const GSCOPE='https://mail.google.com/';
+const TOKEN_TTL=3500*1000; // ~58 min (tokens last 3600s)
 
 const DEFAULT_FOLDERS=[
-  {id:'werk',    name:'Werk',         emoji:'💼', color:'#4da6ff'},
-  {id:'belang',  name:'Belangrijk',   emoji:'⭐', color:'#eab308'},
-  {id:'abos',    name:'Abonnementen', emoji:'📋', color:'#a855f7'},
-  {id:'verz',    name:'Verzekeringen',emoji:'🛡️', color:'#22c55e'},
-  {id:'archief', name:'Archief',      emoji:'📁', color:'#6a80a0'},
+  {id:'werk',   name:'Werk',          emoji:'💼',color:'#4da6ff'},
+  {id:'belang', name:'Belangrijk',    emoji:'⭐',color:'#eab308'},
+  {id:'abos',   name:'Abonnementen',  emoji:'📋',color:'#a855f7'},
+  {id:'verz',   name:'Verzekeringen', emoji:'🛡️',color:'#22c55e'},
+  {id:'archief',name:'Archief',       emoji:'📁',color:'#6a80a0'},
 ];
 
-let C={ant:'',gid:'',g1token:null,g2token:null,g1email:'',g2email:'',spamFilter:true,aiEnabled:true,selAccount:null};
+let C={ant:'',gid:'',
+  g1token:null,g1email:'',g1exp:0,
+  g2token:null,g2email:'',g2exp:0,
+  spamFilter:true,aiEnabled:true,selAccount:null
+};
 let emails=[],spamList=[],folderEmails={},folders=[],curEmail=null,aiText='',curFolderView=null;
+let pendingAuthN=null; // which account (1 or 2) is being re-authed
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // INIT
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 function init(){
+  // Handle OAuth callback (full-page redirect fallback)
   const hash=location.hash;
   if(hash.includes('access_token=')){
     const p=new URLSearchParams(hash.slice(1));
-    const tok=p.get('access_token'),st=p.get('state');
-    if(st==='g1'){C.g1token=tok;saveC();getGEmail(tok,1);}
-    if(st==='g2'){C.g2token=tok;saveC();getGEmail(tok,2);}
+    const tok=p.get('access_token'),st=p.get('state'),exp=p.get('expires_in');
+    const expTime=Date.now()+(parseInt(exp||3600)*1000);
+    if(st==='g1'){C.g1token=tok;C.g1exp=expTime;saveC();getGEmail(tok,1);}
+    if(st==='g2'){C.g2token=tok;C.g2exp=expTime;saveC();getGEmail(tok,2);}
     history.replaceState(null,'',location.pathname);
   }
   try{const s=localStorage.getItem('mr_cfg');if(s)Object.assign(C,JSON.parse(s));}catch(e){}
@@ -350,36 +369,118 @@ function init(){
   try{const s=localStorage.getItem('mr_femails');if(s)folderEmails=JSON.parse(s);}catch(e){}
   if(!folders.length)folders=[...DEFAULT_FOLDERS];
 
+  // Check token expiry on load
+  checkTokenExpiry();
+
   if(!C.ant&&!C.gid){qs('#setup').style.display='flex';}else{startApp();}
   initPWA();
+
+  // Periodically check token expiry
+  setInterval(checkTokenExpiry,60000);
+}
+
+function checkTokenExpiry(){
+  const now=Date.now();
+  const g1exp=C.g1token&&C.g1exp&&C.g1exp<now;
+  const g2exp=C.g2token&&C.g2exp&&C.g2exp<now;
+  if(g1exp||g2exp){
+    let msg='⚠️ ';
+    if(g1exp&&g2exp) msg+='Beide Gmail sessies verlopen';
+    else if(g1exp)   msg+='Gmail 1 sessie verlopen';
+    else             msg+='Gmail 2 sessie verlopen';
+    qs('#status-msg').textContent=msg;
+    qs('#status-bar').classList.add('show');
+    if(g1exp){C.g1token=null;saveC();}
+    if(g2exp){C.g2token=null;saveC();}
+    updateAccountUI();
+  } else {
+    qs('#status-bar').classList.remove('show');
+  }
+}
+
+function reconnectExpired(){
+  // Reconnect whichever accounts are disconnected
+  if(!C.g1token&&C.g1email){connectGmail(1);}
+  else if(!C.g2token&&C.g2email){connectGmail(2);}
+  else{switchTab('settings');}
 }
 
 async function getGEmail(tok,n){
-  try{const r=await gFetch('https://gmail.googleapis.com/gmail/v1/users/me/profile',tok);if(r?.emailAddress){if(n===1)C.g1email=r.emailAddress;else C.g2email=r.emailAddress;saveC();updateAccountUI();toast(`Gmail ${n} verbonden ✓`);}}catch(e){}
+  try{const r=await gFetch('https://gmail.googleapis.com/gmail/v1/users/me/profile',tok,n);if(r?.emailAddress){if(n===1)C.g1email=r.emailAddress;else C.g2email=r.emailAddress;saveC();updateAccountUI();toast(`Gmail ${n} verbonden ✓`);if(qs('#app').style.display!=='none')fetchEmails();}}catch(e){}
 }
-function startApp(){qs('#setup').style.display='none';qs('#app').style.display='flex';updateAccountUI();renderFolders();fetchEmails();prefillSettings();}
+
+function startApp(){
+  qs('#setup').style.display='none';qs('#app').style.display='flex';
+  updateAccountUI();renderFolders();fetchEmails();prefillSettings();
+}
 function saveSetup(){C.ant=qs('#su-ant').value.trim();C.gid=qs('#su-gid').value.trim();if(!C.ant&&!C.gid){toast('Vul minstens één sleutel in');return;}saveC();startApp();}
 function saveC(){localStorage.setItem('mr_cfg',JSON.stringify(C));}
 function saveFolders(){localStorage.setItem('mr_folders',JSON.stringify(folders));localStorage.setItem('mr_femails',JSON.stringify(folderEmails));}
 function prefillSettings(){if(C.ant)qs('#s-ant').value=C.ant;if(C.gid)qs('#s-gid').value=C.gid;qs('#spam-tog').className='toggle'+(C.spamFilter?' on':'');qs('#ai-tog').className='toggle'+(C.aiEnabled?' on':'');}
 
-// ═══════════════════════════════════════
-// OAUTH
-// ═══════════════════════════════════════
-function connectGmail(n){if(!C.gid){toast('Voer eerst een Google Client ID in');switchTab('settings');return;}location.href=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${enc(C.gid)}&redirect_uri=${enc(REDIRECT)}&response_type=token&scope=${enc(GSCOPE)}&state=g${n}&prompt=select_account`;}
-function disconnectGmail(n){if(!confirm(`Gmail ${n} loskoppelen?`))return;if(n===1){C.g1token=null;C.g1email='';emails=emails.filter(e=>e.src!=='g1');}else{C.g2token=null;C.g2email='';emails=emails.filter(e=>e.src!=='g2');}saveC();updateAccountUI();renderInbox();toast(`Gmail ${n} losgekoppeld`);}
-function updateAccountUI(){
-  const sr=(n,tok,email,sid,bid,cls)=>{qs('#'+sid).textContent=tok?(email||'Verbonden ✓'):'Niet verbonden';qs('#'+sid).style.color=tok?'var(--teal)':'';qs('#'+bid).innerHTML=tok?`<button class="btn-conn bdis" onclick="disconnectGmail(${n})">Verbreken</button>`:`<button class="btn-conn ${cls}" onclick="connectGmail(${n})">Verbinden</button>`;};
-  sr(1,C.g1token,C.g1email,'g1status','g1btn','bg1');sr(2,C.g2token,C.g2email,'g2status','g2btn','bg2');
+// ══════════════════════════════════════
+// OAUTH — key improvement: no full redirect, use overlay + localStorage message
+// ══════════════════════════════════════
+function connectGmail(n){
+  if(!C.gid){toast('Voer eerst een Google Client ID in');switchTab('settings');return;}
+  pendingAuthN=n;
+  const hint=n===1?C.g1email:C.g2email;
+  const hintParam=hint?`&login_hint=${enc(hint)}`:'';
+  const email1=n===1?'je eerste':'je tweede';
+
+  qs('#auth-title').textContent=`Gmail ${n} verbinden`;
+  qs('#auth-msg').textContent=`Koppel ${email1} Gmail account aan MailRob.`;
+  qs('#auth-steps').innerHTML=`Na het inloggen keer je automatisch terug in de app. Beide accounts blijven daarna actief.`;
+  qs('#ov-auth').classList.add('open');
+
+  // Store pending n so callback page can detect it
+  localStorage.setItem('mr_pending_auth',n);
 }
 
-// ═══════════════════════════════════════
+function doAuthLogin(){
+  const n=pendingAuthN||parseInt(localStorage.getItem('mr_pending_auth')||'1');
+  const hint=n===1?C.g1email:C.g2email;
+  const hintParam=hint?`&login_hint=${enc(hint)}`:'&prompt=select_account';
+  const url=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${enc(C.gid)}&redirect_uri=${enc(REDIRECT)}&response_type=token&scope=${enc(GSCOPE)}&state=g${n}${hintParam}&include_granted_scopes=true`;
+  closeAuthOverlay();
+  location.href=url; // Full redirect — but token stored properly on return
+}
+
+function closeAuthOverlay(){qs('#ov-auth').classList.remove('open');pendingAuthN=null;}
+
+function disconnectGmail(n){
+  if(!confirm(`Gmail ${n} loskoppelen?`))return;
+  if(n===1){C.g1token=null;C.g1email='';C.g1exp=0;emails=emails.filter(e=>e.src!=='g1');}
+  else{C.g2token=null;C.g2email='';C.g2exp=0;emails=emails.filter(e=>e.src!=='g2');}
+  saveC();updateAccountUI();renderInbox();updateBadges();checkTokenExpiry();toast(`Gmail ${n} losgekoppeld`);
+}
+
+function updateAccountUI(){
+  const expTime=(n)=>n===1?C.g1exp:C.g2exp;
+  const sr=(n,tok,email,sid,bid,cls)=>{
+    const exp=expTime(n);
+    const expStr=tok&&exp?` · verloopt ${new Date(exp).toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'})}`:(!tok&&email?' · verlopen':'');
+    qs('#'+sid).textContent=tok?(email||'Verbonden ✓')+expStr:'Niet verbonden';
+    qs('#'+sid).style.color=tok?'var(--teal)':(!tok&&email?'var(--warn)':'');
+    qs('#'+bid).innerHTML=tok
+      ?`<button class="btn-conn bdis" onclick="disconnectGmail(${n})">Verbreken</button>`
+      :`<button class="btn-conn ${cls}" onclick="connectGmail(${n})">${email?'Herverbinden':'Verbinden'}</button>`;
+  };
+  sr(1,C.g1token,C.g1email,'g1status','g1btn','bg1');
+  sr(2,C.g2token,C.g2email,'g2status','g2btn','bg2');
+}
+
+// ══════════════════════════════════════
 // FETCH
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 async function fetchEmails(){
-  if(!C.g1token&&!C.g2token){qs('#inbox-body').innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Geen accounts verbonden</div><div class="empty-s">Ga naar Instellingen</div></div>`;return;}
+  if(!C.g1token&&!C.g2token){
+    qs('#inbox-body').innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Geen accounts verbonden</div><div class="empty-s">Ga naar Instellingen</div></div>`;return;
+  }
   qs('#inbox-body').innerHTML=`<div class="spin-wrap"><div class="spin"></div><span>E-mails ophalen...</span></div>`;
-  const fns=[];if(C.g1token)fns.push(fetchGmail('g1',C.g1token));if(C.g2token)fns.push(fetchGmail('g2',C.g2token));
+  const fns=[];
+  if(C.g1token)fns.push(fetchGmail('g1',C.g1token));
+  if(C.g2token)fns.push(fetchGmail('g2',C.g2token));
   const results=await Promise.allSettled(fns);
   const fresh=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
   const existIds=new Set(emails.map(e=>e.id));
@@ -391,9 +492,10 @@ async function fetchEmails(){
 
 async function fetchGmail(src,tok){
   try{
-    const r=await gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=25&labelIds=INBOX`,tok);
+    const n=src==='g1'?1:2;
+    const r=await gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=25&labelIds=INBOX`,tok,n);
     if(!r||!r.messages)return[];
-    const msgs=await Promise.all(r.messages.slice(0,20).map(m=>gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`,tok)));
+    const msgs=await Promise.all(r.messages.slice(0,20).map(m=>gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`,tok,n)));
     return msgs.filter(Boolean).map(m=>{
       const h={};(m.payload?.headers||[]).forEach(x=>h[x.name]=x.value);
       const[,fn,fe]=(h.From||'').match(/^(.*?)\s*<(.+)>$/)||[,'',''];
@@ -402,16 +504,21 @@ async function fetchGmail(src,tok){
   }catch(e){console.error(src,e);return[];}
 }
 
-async function gFetch(url,tok){
+async function gFetch(url,tok,n){
   const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
-  if(r.status===401){const n=(C.g1token===tok)?1:2;if(n===1){C.g1token=null;C.g1email='';}else{C.g2token=null;C.g2email='';}saveC();updateAccountUI();toast(`Gmail ${n} sessie verlopen`);return null;}
+  if(r.status===401){
+    // Token expired — show reconnect bar instead of redirecting
+    if(n===1){C.g1token=null;}else{C.g2token=null;}
+    saveC();updateAccountUI();checkTokenExpiry();
+    return null;
+  }
   return r.ok?r.json():null;
 }
 function refreshEmails(){emails=[];fetchEmails();}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // SPAM
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 async function analyzeSpam(batch){
   if(!C.ant||!batch.length)return;
   const list=batch.slice(0,15).map((e,i)=>`${i+1}. Van: ${e.from} <${e.fromE}>\n   Onderwerp: ${e.sub}\n   Preview: ${(e.prev||'').slice(0,80)}`).join('\n\n');
@@ -424,101 +531,76 @@ async function analyzeSpam(batch){
   }catch(e){console.error('Spam',e);}
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // FOLDERS
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 let newFolderEmoji='📂';
-
 function renderFolders(){
-  const el=qs('#folder-list');
   const emojis=['📂','💼','⭐','📋','🛡️','🏠','💰','🎯','📱','🔑','📝','❤️','🚗','✈️','🎓'];
   let html=`<div class="section-lbl">Jouw mappen</div>`;
   folders.forEach(f=>{
     const count=(folderEmails[f.id]||[]).length;
+    const isDef=DEFAULT_FOLDERS.find(d=>d.id===f.id);
     html+=`<div class="folder-item" onclick="openFolderView('${f.id}')">
       <div class="folder-icon" style="background:${f.color}20;color:${f.color}">${f.emoji}</div>
-      <div class="folder-info">
-        <div class="folder-name">${esc(f.name)}</div>
-        <div class="folder-count">${count} e-mail${count!==1?'s':''}</div>
-      </div>
-      ${!DEFAULT_FOLDERS.find(d=>d.id===f.id)?`<div class="folder-del" onclick="event.stopPropagation();deleteFolder('${f.id}')">×</div>`:''}
+      <div class="folder-info"><div class="folder-name">${esc(f.name)}</div><div class="folder-count">${count} e-mail${count!==1?'s':''}</div></div>
+      ${!isDef?`<div class="folder-del" onclick="event.stopPropagation();deleteFolder('${f.id}')">×</div>`:''}
     </div>`;
   });
-  html+=`<div class="section-lbl" style="margin-top:8px">Nieuwe map aanmaken</div>
+  html+=`<div class="section-lbl" style="margin-top:8px">Nieuwe map</div>
   <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px">
     <div style="display:flex;gap:8px;align-items:center">
-      <input class="add-folder-inp" id="new-folder-name" placeholder="Mapnaam..." style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
-      <button onclick="addFolder()" style="background:var(--teal);color:#080c12;border:none;border-radius:8px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">+ Toevoegen</button>
+      <input class="add-folder-inp" id="new-folder-name" placeholder="Mapnaam...">
+      <button onclick="addFolder()" style="background:var(--teal);color:#080c12;border:none;border-radius:8px;padding:10px 16px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">+</button>
     </div>
     <div style="font-size:11px;color:var(--sub);margin:10px 0 6px">Kies een emoji:</div>
-    <div class="emoji-row" id="emoji-row">
-      ${emojis.map(e=>`<div class="emoji-opt${e===newFolderEmoji?' sel':''}" onclick="selectEmoji('${e}')">${e}</div>`).join('')}
-    </div>
+    <div class="emoji-row" id="emoji-row">${emojis.map(e=>`<div class="emoji-opt${e===newFolderEmoji?' sel':''}" onclick="selectEmoji('${e}')">${e}</div>`).join('')}</div>
   </div>`;
-  el.innerHTML=html;
+  qs('#folder-list').innerHTML=html;
 }
-
-function selectEmoji(e){
-  newFolderEmoji=e;
-  qs('#emoji-row').querySelectorAll('.emoji-opt').forEach(el=>{el.classList.toggle('sel',el.textContent===e);});
-}
-
+function selectEmoji(e){newFolderEmoji=e;qs('#emoji-row').querySelectorAll('.emoji-opt').forEach(el=>el.classList.toggle('sel',el.textContent===e));}
 function addFolder(){
   const name=(qs('#new-folder-name').value||'').trim();
   if(!name){toast('Vul een mapnaam in');return;}
   if(folders.find(f=>f.name.toLowerCase()===name.toLowerCase())){toast('Map bestaat al');return;}
   const colors=['#4da6ff','#a855f7','#f97316','#ec4899','#14b8a6','#eab308','#ef4444'];
-  const color=colors[folders.length%colors.length];
   const id='f_'+Date.now();
-  folders.push({id,name,emoji:newFolderEmoji,color});
-  folderEmails[id]=[];
-  saveFolders();renderFolders();toast(`Map "${name}" aangemaakt ✓`);
+  folders.push({id,name,emoji:newFolderEmoji,color:colors[folders.length%colors.length]});
+  folderEmails[id]=[];saveFolders();renderFolders();toast(`Map "${name}" aangemaakt ✓`);
 }
-
 function deleteFolder(id){
   const f=folders.find(x=>x.id===id);if(!f)return;
-  if(!confirm(`Map "${f.name}" verwijderen? E-mails gaan terug naar inbox.`))return;
-  const mails=folderEmails[id]||[];
-  mails.forEach(e=>{if(!emails.find(x=>x.id===e.id))emails.push(e);});
-  folders=folders.filter(x=>x.id!==id);
-  delete folderEmails[id];
-  emails.sort((a,b)=>b.date-a.date);
-  saveFolders();renderFolders();renderInbox();toast(`Map verwijderd`);
+  if(!confirm(`Map "${f.name}" verwijderen?`))return;
+  (folderEmails[id]||[]).forEach(e=>{if(!emails.find(x=>x.id===e.id))emails.push(e);});
+  folders=folders.filter(x=>x.id!==id);delete folderEmails[id];
+  emails.sort((a,b)=>b.date-a.date);saveFolders();renderFolders();renderInbox();toast('Map verwijderd');
 }
-
-function openFolderView(folderId){
-  const f=folders.find(x=>x.id===folderId);if(!f)return;
-  curFolderView=folderId;
-  qs('#fv-title').textContent=f.emoji+' '+f.name;
-  const mails=folderEmails[folderId]||[];
-  qs('#fv-body').innerHTML=mails.length
-    ?mails.map(e=>emailCard(e,`openEmail('${e.id}',false,'${folderId}')`)).join('')
-    :`<div class="empty"><div class="empty-ico">${f.emoji}</div><div class="empty-t">Geen e-mails in ${f.name}</div><div class="empty-s">Verplaats e-mails via de inbox</div></div>`;
+function openFolderView(fid){
+  const f=folders.find(x=>x.id===fid);if(!f)return;
+  curFolderView=fid;qs('#fv-title').textContent=f.emoji+' '+f.name;
+  const mails=folderEmails[fid]||[];
+  qs('#fv-body').innerHTML=mails.length?mails.map(e=>emailCard(e,`openEmail('${e.id}',false,'${fid}')`)).join(''):`<div class="empty"><div class="empty-ico">${f.emoji}</div><div class="empty-t">Geen e-mails in ${f.name}</div><div class="empty-s">Verplaats e-mails via de inbox</div></div>`;
   qs('#ov-folder').classList.add('open');
 }
 function closeFolderView(){qs('#ov-folder').classList.remove('open');curFolderView=null;}
-
-function moveToFolder(folderId){
+function moveToFolder(fid){
   if(!curEmail)return;
+  const f=folders.find(x=>x.id===fid);if(!f)return;
   const e=curEmail;
-  const f=folders.find(x=>x.id===folderId);if(!f)return;
-  // Remove from current location
   emails=emails.filter(x=>x.id!==e.id);
   folders.forEach(fl=>{if(folderEmails[fl.id])folderEmails[fl.id]=folderEmails[fl.id].filter(x=>x.id!==e.id);});
-  // Add to target
-  if(!folderEmails[folderId])folderEmails[folderId]=[];
-  folderEmails[folderId].push({...e});
+  if(!folderEmails[fid])folderEmails[fid]=[];
+  folderEmails[fid].push({...e});
   saveFolders();renderInbox();renderFolders();updateBadges();
   closeDetail();toast(`Verplaatst naar ${f.emoji} ${f.name}`);
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // RENDER
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 function initials(n){return(n||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
 function avatarColor(e){const c=['#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316','#22c55e','#14b8a6','#3b82f6'];let h=0;for(const x of e||'')h=(h*31+x.charCodeAt(0))&0xFFFFFFFF;return c[Math.abs(h)%c.length];}
 function fmtDate(ts){const d=new Date(ts),diff=Date.now()-ts;if(diff<60e3)return'nu';if(diff<3600e3)return Math.floor(diff/60e3)+'m';if(diff<86400e3)return d.toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'});if(diff<604800e3)return d.toLocaleDateString('nl',{weekday:'short'});return d.toLocaleDateString('nl',{day:'numeric',month:'short'});}
-
 function emailCard(e,onclick){
   const col=avatarColor(e.fromE);
   const sc=e.src==='g1'?'<span class="chip chip-g1">Gmail 1</span>':'<span class="chip chip-g2">Gmail 2</span>';
@@ -526,7 +608,7 @@ function emailCard(e,onclick){
   return`<div class="mail-item${e.unread?' unread':''}" onclick="${onclick}">${e.unread?'<div class="unread-dot"></div>':''}<div class="avatar" style="background:${col}20;color:${col}">${initials(e.from)}</div><div class="mi-body"><div class="mi-top"><div class="mi-from">${esc(e.from)}</div><div class="mi-time">${fmtDate(e.date)}</div></div><div class="mi-subject">${esc(e.sub)}</div><div class="mi-foot">${sc}${sp}<span class="mi-preview">${esc((e.prev||'').slice(0,60))}</span></div></div></div>`;
 }
 function renderInbox(){const i=emails.filter(e=>!e.spam);qs('#inbox-body').innerHTML=i.length?i.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Inbox leeg</div></div>`;}
-function renderSpam(){qs('#spam-body').innerHTML=spamList.length?spamList.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">🛡️</div><div class="empty-t">Geen spam gevonden</div><div class="empty-s">AI analyseert automatisch</div></div>`;}
+function renderSpam(){qs('#spam-body').innerHTML=spamList.length?spamList.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">🛡️</div><div class="empty-t">Geen spam gevonden</div></div>`;}
 function updateBadges(){
   const u=emails.filter(e=>e.unread&&!e.spam).length,sp=spamList.length;
   const ub=qs('#unread-badge');ub.style.display=u>0?'inline':'none';ub.textContent=u;
@@ -534,21 +616,17 @@ function updateBadges(){
   const sb=qs('#nb-spam');sb.style.display=sp>0?'block':'none';sb.textContent=sp;
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // EMAIL DETAIL
-// ═══════════════════════════════════════
-async function openEmail(id,fromFolder=false,folderId=null){
+// ══════════════════════════════════════
+async function openEmail(id,fromFolder=false,fid=null){
   let e=emails.find(x=>x.id===id)||spamList.find(x=>x.id===id);
-  if(!e&&folderId)e=(folderEmails[folderId]||[]).find(x=>x.id===id);
-  if(!e){for(const fid of Object.keys(folderEmails)){const found=(folderEmails[fid]||[]).find(x=>x.id===id);if(found){e=found;break;}}}
+  if(!e){for(const fl of Object.keys(folderEmails)){const f=(folderEmails[fl]||[]).find(x=>x.id===id);if(f){e=f;break;}}}
   if(!e)return;
   curEmail=e;e.unread=false;renderInbox();updateBadges();
   const acc=e.src==='g1'?`📧 Gmail 1${C.g1email?' ('+C.g1email+')':''}`:`📧 Gmail 2${C.g2email?' ('+C.g2email+')':''}`;
   qs('#det-ttl-hdr').textContent=acc;
-
-  // Build folder picker
   const folderPicker=folders.map(f=>`<div class="move-opt" onclick="moveToFolder('${f.id}')"><span class="move-opt-ico">${f.emoji}</span><span class="move-opt-name">${esc(f.name)}</span></div>`).join('');
-
   qs('#det-scroll').innerHTML=`
     <div class="det-subject">${esc(e.sub)}</div>
     <div class="det-meta">
@@ -563,18 +641,16 @@ async function openEmail(id,fromFolder=false,folderId=null){
       <div class="act-btn red" onclick="deleteEmail()">🗑️</div>
     </div>
     <div class="move-picker" id="move-picker">
-      <div class="move-ttl">Verplaatsen naar:</div>
-      ${folderPicker}
+      <div class="move-ttl">Verplaatsen naar:</div>${folderPicker}
     </div>
     <div class="det-body" id="det-body"><div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div></div>`;
-
   qs('#ov-detail').classList.add('open');
-
-  const tok=e.src==='g1'?C.g1token:C.g2token;
+  const n=e.src==='g1'?1:2;
+  const tok=n===1?C.g1token:C.g2token;
   let body='',isHtml=false;
   try{
     if(tok){
-      const d=await gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}?format=full`,tok);
+      const d=await gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}?format=full`,tok,n);
       body=d?extractBody(d.payload):e.prev;
       isHtml=body.includes('<')&&(body.includes('<div')||body.includes('<p')||body.includes('<table'));
       fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/modify`,{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({removeLabelIds:['UNREAD']})}).catch(()=>{});
@@ -584,36 +660,34 @@ async function openEmail(id,fromFolder=false,folderId=null){
   if(isHtml){const iframe=document.createElement('iframe');iframe.sandbox='allow-same-origin';iframe.style.cssText='width:100%;border:none;background:white;border-radius:9px;min-height:200px';iframe.onload=()=>{try{iframe.style.height=iframe.contentDocument.body.scrollHeight+32+'px';}catch(e){}};el.innerHTML='';el.appendChild(iframe);iframe.contentDocument.open();iframe.contentDocument.write(body);iframe.contentDocument.close();}
   else{el.innerHTML=`<pre style="white-space:pre-wrap;font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.75;color:var(--text)">${esc(body)}</pre>`;}
 }
-
 function toggleMovePicker(){const p=qs('#move-picker');p.classList.toggle('open');}
 function extractBody(p){if(!p)return'';if(p.body?.data)return atob(p.body.data.replace(/-/g,'+').replace(/_/g,'/'));if(p.parts){const h=p.parts.find(x=>x.mimeType==='text/html');if(h?.body?.data)return atob(h.body.data.replace(/-/g,'+').replace(/_/g,'/'));const t=p.parts.find(x=>x.mimeType==='text/plain');if(t?.body?.data)return atob(t.body.data.replace(/-/g,'+').replace(/_/g,'/'));for(const x of p.parts){const n=extractBody(x);if(n)return n;}}return'';}
 function closeDetail(){qs('#ov-detail').classList.remove('open');curEmail=null;}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // ACTIONS
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 async function markSpam(){if(!curEmail)return;const e=curEmail;emails=emails.filter(x=>x.id!==e.id);if(!spamList.find(x=>x.id===e.id))spamList.push({...e,spam:true});localStorage.setItem('mr_spam',JSON.stringify(spamList));const tok=e.src==='g1'?C.g1token:C.g2token;if(tok)fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/modify`,{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({addLabelIds:['SPAM'],removeLabelIds:['INBOX']})}).catch(()=>{});closeDetail();renderInbox();renderSpam();updateBadges();toast('Spam gemarkeerd 🚫');}
 function notSpam(){if(!curEmail)return;const e=curEmail;spamList=spamList.filter(x=>x.id!==e.id);localStorage.setItem('mr_spam',JSON.stringify(spamList));emails.push({...e,spam:false});emails.sort((a,b)=>b.date-a.date);closeDetail();renderInbox();renderSpam();updateBadges();toast('Niet spam ✓');}
 async function deleteEmail(){if(!curEmail)return;if(!confirm('E-mail verwijderen?'))return;const e=curEmail;emails=emails.filter(x=>x.id!==e.id);spamList=spamList.filter(x=>x.id!==e.id);folders.forEach(f=>{if(folderEmails[f.id])folderEmails[f.id]=folderEmails[f.id].filter(x=>x.id!==e.id);});localStorage.setItem('mr_spam',JSON.stringify(spamList));saveFolders();const tok=e.src==='g1'?C.g1token:C.g2token;if(tok)fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/trash`,{method:'POST',headers:{Authorization:`Bearer ${tok}`}}).catch(()=>{});closeDetail();renderInbox();renderFolders();renderSpam();updateBadges();toast('Verwijderd 🗑️');}
 function replyEmail(){if(!curEmail)return;closeDetail();openCompose({to:curEmail.fromE,sub:'Re: '+curEmail.sub,src:curEmail.src});}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // COMPOSE
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 function openCompose(pre={}){
   qs('#c-to').value=pre.to||'';qs('#c-sub').value=pre.sub||'';qs('#c-body').value=pre.body||'';
   qs('#ai-prompt').value='';qs('#ai-out').style.display='none';qs('#ins-btn').style.display='none';aiText='';
   qs('#comp-title').textContent=pre.to?'Beantwoorden':'Nieuwe e-mail';
   const row=qs('#acc-row'),accs=[];
-  if(C.g1token)accs.push({id:'g1',lbl:`📧 Gmail 1${C.g1email?' · '+C.g1email.split('@')[0]:''}`,cls:'g1'});
-  if(C.g2token)accs.push({id:'g2',lbl:`📧 Gmail 2${C.g2email?' · '+C.g2email.split('@')[0]:''}`,cls:'g2'});
+  if(C.g1token)accs.push({id:'g1',lbl:`📧 ${C.g1email?C.g1email.split('@')[0]:'Gmail 1'}`,cls:'g1'});
+  if(C.g2token)accs.push({id:'g2',lbl:`📧 ${C.g2email?C.g2email.split('@')[0]:'Gmail 2'}`,cls:'g2'});
   if(!accs.length){row.innerHTML='<span style="font-size:13px;color:var(--danger)">Geen accounts verbonden</span>';C.selAccount=null;}
   else{C.selAccount=pre.src||accs[0].id;row.innerHTML=accs.map(a=>`<div class="acc-chip${C.selAccount===a.id?' sel-'+a.cls:''}" onclick="selAcc('${a.id}','${a.cls}')">${a.lbl}</div>`).join('');}
   qs('#ov-compose').classList.add('open');
 }
 function closeCompose(){qs('#ov-compose').classList.remove('open');}
-function selAcc(id,cls){C.selAccount=id;qs('#acc-row').querySelectorAll('.acc-chip').forEach(c=>{c.className='acc-chip';if((id==='g1'&&c.textContent.includes('Gmail 1'))||(id==='g2'&&c.textContent.includes('Gmail 2')))c.className='acc-chip sel-'+cls;});}
-
+function selAcc(id,cls){C.selAccount=id;qs('#acc-row').querySelectorAll('.acc-chip').forEach(c=>{c.className='acc-chip';if((id==='g1'&&c.dataset)||(id==='g2')){}});qs('#acc-row').querySelectorAll('.acc-chip').forEach((c,i)=>{const aid=i===0?'g1':'g2';c.className='acc-chip'+(aid===id?' sel-'+cls:'');});}
 async function generateAI(){
   const prompt=qs('#ai-prompt').value.trim();if(!prompt){toast('Beschrijf wat je wilt schrijven');return;}if(!C.ant){toast('Geen Anthropic API key');return;}
   const btn=qs('#gen-btn');btn.textContent='✨ Bezig...';btn.disabled=true;
@@ -630,14 +704,14 @@ async function sendEmail(){
   catch(e){toast('Fout: '+e.message);}finally{btn.textContent='Versturen ↗';btn.disabled=false;}
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // CLAUDE API
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 async function claudeAPI(sys,msg){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true','x-api-key':C.ant,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys,messages:[{role:'user',content:msg}]})});if(!r.ok)throw new Error('API fout '+r.status);return r.json();}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // NAV & SETTINGS
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 const TABS={inbox:'Inbox',spam:'Spam',folders:'Mappen',settings:'Instellingen'};
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -651,9 +725,9 @@ function togglePref(k,id){C[k]=!C[k];saveC();qs('#'+id).className='toggle'+(C[k]
 function saveKeys(){const a=qs('#s-ant').value.trim(),g=qs('#s-gid').value.trim();if(a)C.ant=a;if(g)C.gid=g;saveC();toast('Opgeslagen ✓');}
 function clearCache(){if(!confirm('Alle lokale e-maildata wissen?'))return;emails=[];spamList=[];localStorage.removeItem('mr_spam');renderInbox();renderSpam();updateBadges();toast('Cache gewist');}
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // PWA
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 function initPWA(){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#080c12"/><rect x="72" y="144" width="368" height="244" rx="24" fill="none" stroke="#00e5c0" stroke-width="22"/><polyline points="72,168 256,288 440,168" fill="none" stroke="#00e5c0" stroke-width="22"/></svg>`;
   const icon='data:image/svg+xml;base64,'+btoa(svg);qs('#pwa-icon').href=icon;
@@ -661,9 +735,9 @@ function initPWA(){
   qs('#manifest-link').href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(mf));qs('#manifest-link').rel='manifest';
 }
 
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════════════
+// ══════════════════════════════════════
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function enc(s){return encodeURIComponent(s);}
 function qs(s){return document.querySelector(s);}
