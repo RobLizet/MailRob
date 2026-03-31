@@ -50,9 +50,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 #status-bar.show{display:flex}
 #status-bar button{background:var(--warn);color:#080c12;border:none;border-radius:6px;padding:4px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:auto}
 
+/* SELECT BAR */
+#select-bar{display:none;background:var(--s2);border-bottom:1px solid var(--border);padding:10px 14px;align-items:center;gap:10px;flex-shrink:0}
+#select-bar.show{display:flex}
+#select-count{font-size:13px;font-weight:600;flex:1;color:var(--text)}
+.sel-btn{padding:7px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none}
+.sel-btn-cancel{background:var(--s3);color:var(--sub)}
+.sel-btn-del{background:var(--danger);color:#fff}
+.sel-btn-spam{background:var(--s3);color:var(--warn);margin-right:4px}
+
 /* MAIL LIST */
 .mail-item{padding:13px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:11px;align-items:flex-start;position:relative;transition:background .12s}
 .mail-item:active{background:var(--s1)}
+.mail-item.selected{background:rgba(0,229,192,.07);border-left:3px solid var(--teal)}
+.mail-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--s2);display:none;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;transition:all .15s}
+.select-mode .mail-check{display:flex}
+.mail-item.selected .mail-check{background:var(--teal);border-color:var(--teal);color:#080c12}
+.select-mode .unread-dot{display:none}
 .mail-item.unread .mi-subject{font-weight:600}
 .unread-dot{position:absolute;left:5px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:var(--teal)}
 .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;font-family:'Syne',sans-serif}
@@ -203,6 +217,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 
 <!-- APP -->
 <div id="app">
+  <div id="select-bar">
+    <span id="select-count">0 geselecteerd</span>
+    <button class="sel-btn sel-btn-spam" onclick="spamSelected()">🚫 Spam</button>
+    <button class="sel-btn sel-btn-del" onclick="deleteSelected()">🗑️ Wissen</button>
+    <button class="sel-btn sel-btn-cancel" onclick="cancelSelect()">✕</button>
+  </div>
   <div id="status-bar">
     <span id="status-msg">⚠️ Sessie verlopen</span>
     <button onclick="reconnectExpired()">Opnieuw verbinden</button>
@@ -210,6 +230,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   <div class="hdr">
     <div class="hdr-title" id="hdr-title">Inbox <span id="unread-badge" style="display:none"></span></div>
     <div class="hdr-btn" id="hdr-refresh" onclick="refreshEmails()">⟳</div>
+    <div class="hdr-btn" id="hdr-select" onclick="toggleSelectMode()" title="Selecteren">☑️</div>
     <div class="hdr-btn" onclick="openCompose()">✏️</div>
   </div>
   <div class="content">
@@ -595,8 +616,47 @@ function moveToFolder(fid){
   closeDetail();toast(`Verplaatst naar ${f.emoji} ${f.name}`);
 }
 
-// ══════════════════════════════════════
-// RENDER
+let selectMode=false, selectedIds=new Set();
+
+function toggleSelectMode(){
+  selectMode=!selectMode;
+  selectedIds.clear();
+  qs('#select-bar').classList.toggle('show',selectMode);
+  qs('#hdr-select').style.background=selectMode?'var(--teal-dim)':'';
+  qs('#hdr-select').style.borderColor=selectMode?'var(--teal)':'';
+  renderInbox();
+}
+function cancelSelect(){selectMode=false;selectedIds.clear();qs('#select-bar').classList.remove('show');qs('#hdr-select').style.background='';qs('#hdr-select').style.borderColor='';renderInbox();}
+function toggleSelectEmail(id){
+  if(selectedIds.has(id))selectedIds.delete(id);else selectedIds.add(id);
+  const n=selectedIds.size;
+  qs('#select-count').textContent=n+' geselecteerd';
+  renderInbox();
+}
+async function deleteSelected(){
+  if(!selectedIds.size){toast('Selecteer eerst e-mails');return;}
+  if(!confirm(`${selectedIds.size} e-mail(s) verwijderen?`))return;
+  for(const id of selectedIds){
+    const e=emails.find(x=>x.id===id);if(!e)continue;
+    const tok=e.src==='g1'?C.g1token:C.g2token;
+    if(tok)fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/trash`,{method:'POST',headers:{Authorization:`Bearer ${tok}`}}).catch(()=>{});
+    emails=emails.filter(x=>x.id!==id);
+    folders.forEach(f=>{if(folderEmails[f.id])folderEmails[f.id]=folderEmails[f.id].filter(x=>x.id!==id);});
+  }
+  saveFolders();cancelSelect();renderInbox();updateBadges();toast(`Verwijderd 🗑️`);
+}
+async function spamSelected(){
+  if(!selectedIds.size){toast('Selecteer eerst e-mails');return;}
+  for(const id of selectedIds){
+    const e=emails.find(x=>x.id===id);if(!e)continue;
+    const tok=e.src==='g1'?C.g1token:C.g2token;
+    if(tok)fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${e.rawId}/modify`,{method:'POST',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({addLabelIds:['SPAM'],removeLabelIds:['INBOX']})}).catch(()=>{});
+    emails=emails.filter(x=>x.id!==id);
+    if(!spamList.find(x=>x.id===id))spamList.push({...e,spam:true});
+  }
+  localStorage.setItem('mr_spam',JSON.stringify(spamList));
+  cancelSelect();renderInbox();renderSpam();updateBadges();toast(`Als spam gemarkeerd 🚫`);
+}
 // ══════════════════════════════════════
 function initials(n){return(n||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
 function avatarColor(e){const c=['#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316','#22c55e','#14b8a6','#3b82f6'];let h=0;for(const x of e||'')h=(h*31+x.charCodeAt(0))&0xFFFFFFFF;return c[Math.abs(h)%c.length];}
@@ -605,9 +665,21 @@ function emailCard(e,onclick){
   const col=avatarColor(e.fromE);
   const sc=e.src==='g1'?'<span class="chip chip-g1">Gmail 1</span>':'<span class="chip chip-g2">Gmail 2</span>';
   const sp=e.spam?'<span class="chip chip-spam">Spam</span>':'';
-  return`<div class="mail-item${e.unread?' unread':''}" onclick="${onclick}">${e.unread?'<div class="unread-dot"></div>':''}<div class="avatar" style="background:${col}20;color:${col}">${initials(e.from)}</div><div class="mi-body"><div class="mi-top"><div class="mi-from">${esc(e.from)}</div><div class="mi-time">${fmtDate(e.date)}</div></div><div class="mi-subject">${esc(e.sub)}</div><div class="mi-foot">${sc}${sp}<span class="mi-preview">${esc((e.prev||'').slice(0,60))}</span></div></div></div>`;
+  const sel=selectedIds.has(e.id);
+  const clickFn=selectMode?`toggleSelectEmail('${e.id}')`:`${onclick}`;
+  return`<div class="mail-item${e.unread?' unread':''}${sel?' selected':''}" onclick="${clickFn}">
+    ${!selectMode&&e.unread?'<div class="unread-dot"></div>':''}
+    <div class="mail-check">${sel?'✓':''}</div>
+    <div class="avatar" style="background:${col}20;color:${col}">${initials(e.from)}</div>
+    <div class="mi-body"><div class="mi-top"><div class="mi-from">${esc(e.from)}</div><div class="mi-time">${fmtDate(e.date)}</div></div><div class="mi-subject">${esc(e.sub)}</div><div class="mi-foot">${sc}${sp}<span class="mi-preview">${esc((e.prev||'').slice(0,60))}</span></div></div>
+  </div>`;
 }
-function renderInbox(){const i=emails.filter(e=>!e.spam);qs('#inbox-body').innerHTML=i.length?i.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Inbox leeg</div></div>`;}
+function renderInbox(){
+  const i=emails.filter(e=>!e.spam);
+  const wrap=selectMode?'<div class="select-mode">':'';
+  const wrapEnd=selectMode?'</div>':'';
+  qs('#inbox-body').innerHTML=i.length?(wrap+i.map(e=>emailCard(e,`openEmail('${e.id}')`)).join('')+wrapEnd):`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Inbox leeg</div></div>`;
+}
 function renderSpam(){qs('#spam-body').innerHTML=spamList.length?spamList.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">🛡️</div><div class="empty-t">Geen spam gevonden</div></div>`;}
 function updateBadges(){
   const u=emails.filter(e=>e.unread&&!e.spam).length,sp=spamList.length;
@@ -720,6 +792,8 @@ function switchTab(tab){
   const u=emails.filter(e=>e.unread&&!e.spam).length;
   qs('#hdr-title').innerHTML=TABS[tab]+(tab==='inbox'?` <span id="unread-badge"${u>0?'':' style="display:none"'}>${u}</span>`:'');
   qs('#hdr-refresh').style.display=tab==='inbox'?'flex':'none';
+  qs('#hdr-select').style.display=tab==='inbox'?'flex':'none';
+  if(tab!=='inbox')cancelSelect();
 }
 function togglePref(k,id){C[k]=!C[k];saveC();qs('#'+id).className='toggle'+(C[k]?' on':'');}
 function saveKeys(){const a=qs('#s-ant').value.trim(),g=qs('#s-gid').value.trim();if(a)C.ant=a;if(g)C.gid=g;saveC();toast('Opgeslagen ✓');}
