@@ -213,11 +213,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <input type="text" class="fi" id="su-gid" placeholder="123456789-abc.apps.googleusercontent.com">
     <p style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5">Één Client ID voor beide Gmail accounts</p>
   </div>
-  <div class="setup-card">
-    <h3>💙 Microsoft Client ID (Outlook)</h3>
-    <input type="text" class="fi" id="su-mid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-    <p style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5">Via portal.azure.com → App registrations (optioneel)</p>
-  </div>
   <button class="btn-p" onclick="saveSetup()">Opslaan &amp; Starten →</button>
   <p class="setup-note">API keys worden lokaal opgeslagen op je iPhone.</p>
   <button onclick="hardReset()" style="margin-top:16px;background:none;border:none;color:var(--danger);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-decoration:underline;opacity:.7">Alles wissen en opnieuw beginnen</button>
@@ -259,10 +254,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
           <div><div class="set-lbl">📧 Extra account</div><div class="set-sub" id="g2status">Niet verbonden</div></div>
           <div id="g2btn"><button class="btn-conn bg2" onclick="connectGmail(2)">Verbinden</button></div>
         </div>
-        <div class="set-row">
-          <div><div class="set-lbl">💙 Outlook</div><div class="set-sub" id="olstatus">Niet verbonden</div></div>
-          <div id="olbtn"><button class="btn-conn bol" onclick="connectOutlook()">Verbinden</button></div>
-        </div>
       </div>
       <div class="set-sect">
         <div class="set-ttl">AI Functies</div>
@@ -273,7 +264,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <div class="set-ttl">API Sleutels bijwerken</div>
         <input type="password" class="set-inp" id="s-ant" placeholder="Anthropic API Key">
         <input type="text" class="set-inp" id="s-gid" placeholder="Google Client ID">
-        <input type="text" class="set-inp" id="s-mid" placeholder="Microsoft Client ID (Outlook)">
         <button class="btn-p" style="margin-top:10px" onclick="saveKeys()">Opslaan</button>
       </div>
       <div class="set-sect">
