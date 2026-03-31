@@ -493,14 +493,6 @@ function disconnectGmail(n){
   saveC();updateAccountUI();renderInbox();updateBadges();checkTokenExpiry();toast(`Gmail ${n} losgekoppeld`);
 }
 
-  pendingAuthN='ol';
-  qs('#auth-title').textContent='Outlook verbinden';
-  qs('#auth-msg').textContent='Koppel je Outlook account aan MailRob.';
-  qs('#auth-steps').innerHTML='Na het inloggen keer je automatisch terug in de app.';
-  qs('#ov-auth').classList.add('open');
-  localStorage.setItem('mr_pending_auth','ol');
-}
-}
 function updateAccountUI(){
   const fmtExp=(exp)=>exp?` · verloopt ${new Date(exp).toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'})}`:''
   // Gmail 1
@@ -549,19 +541,7 @@ async function fetchGmail(src,tok){
   }catch(e){console.error(src,e);return[];}
 }
 
-    if(!r.ok)return[];
-    const d=await r.json();
-    return(d.value||[]).map(m=>({
-      id:'ol_'+m.id,rawId:m.id,src:'ol',
-      from:m.from?.emailAddress?.name||m.from?.emailAddress?.address||'?',
-      fromE:m.from?.emailAddress?.address||'',
-      to:(m.toRecipients||[]).map(x=>x.emailAddress?.address).join(', '),
-      sub:m.subject||'(geen onderwerp)',prev:m.bodyPreview||'',
-      date:new Date(m.receivedDateTime).getTime(),
-      unread:!m.isRead,spam:false
-    }));
-  }catch(e){console.error('Outlook',e);return[];}
-}
+async function gFetch(url,tok,n){
   const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
   if(r.status===401){
     // Token expired — show reconnect bar instead of redirecting
