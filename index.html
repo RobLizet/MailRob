@@ -65,7 +65,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .ifbtn.on{background:var(--tdim);color:var(--teal);border-color:var(--teal)}
 
 /* MAIL ITEMS */
-.mi{padding:13px 14px;border-bottom:1px solid var(--border);display:flex;gap:11px;align-items:flex-start;position:relative;cursor:pointer;transition:background .12s}
+.mi{padding:13px 14px;border-bottom:1px solid var(--border);display:flex;gap:11px;align-items:flex-start;position:relative;cursor:pointer;transition:background .12s;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .mi:active{background:var(--s1)}
 .mi.sel{background:rgba(0,229,192,.07);border-left:3px solid var(--teal)}
 .mi.unread .msub{font-weight:600}
@@ -398,17 +398,25 @@ function init(){
   if(!C.ant&&!C.gid){qs('#setup').style.display='flex';}
   else{startApp();}
   setInterval(checkExp, 60000);
-  // Email click delegation
-  document.addEventListener('click', onEmailClick);
-}
-
-function onEmailClick(e){
-  const card = e.target.closest('[data-eid]');
-  if(!card) return;
-  const id = card.dataset.eid;
-  if(!id) return;
-  if(selMode){toggleSelItem(id);return;}
-  openEmail(id);
+  // Email tap — use touchend for iOS PWA reliability
+  let touchMoved=false;
+  document.addEventListener('touchstart',function(e){touchMoved=false;},true);
+  document.addEventListener('touchmove',function(e){touchMoved=true;},true);
+  document.addEventListener('touchend',function(e){
+    if(touchMoved)return;
+    const card=e.target.closest('[data-eid]');
+    if(!card)return;
+    e.preventDefault();
+    const id=card.dataset.eid;
+    if(selMode){toggleSelItem(id);}else{openEmail(id);}
+  },true);
+  // Click fallback for non-touch
+  document.addEventListener('click',function(e){
+    const card=e.target.closest('[data-eid]');
+    if(!card)return;
+    const id=card.dataset.eid;
+    if(selMode){toggleSelItem(id);}else{openEmail(id);}
+  });
 }
 
 function checkExp(){
