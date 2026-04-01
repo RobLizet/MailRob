@@ -270,7 +270,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <button class="bp" style="margin-top:10px" onclick="saveKeys()">Opslaan</button>
       </div>
       <div class="sset">
-        <div class="sttl">Cache</div>
+        <div class="sttl">Scriptable Widget</div>
+        <div class="srow">
+          <div><div class="slb">📋 Gmail Token kopiëren</div><div class="ssub">Plak in Scriptable Keychain setup</div></div>
+          <button class="bcn" style="background:var(--teal);color:#fff" onclick="copyToken()">Kopiëren</button>
+        </div>
+      </div>
         <div class="srow"><div class="slb">E-mails wissen</div><button class="bcn bdis" onclick="clearCache()">Wissen</button></div>
       </div>
       <div class="footer">Made by Rob Borghouts 2026</div>
@@ -735,9 +740,18 @@ async function openEmail(id){
   const el=qs('#dbody'); if(!el)return;
   if(isHtml){
     const iframe=document.createElement('iframe');
-    iframe.sandbox='allow-same-origin';
+    iframe.sandbox='allow-same-origin allow-popups allow-popups-to-escape-sandbox';
     iframe.style.cssText='width:100%;border:none;background:white;border-radius:9px;min-height:200px';
-    iframe.onload=()=>{try{iframe.style.height=iframe.contentDocument.body.scrollHeight+32+'px';}catch(e){}};
+    iframe.onload=()=>{
+      try{
+        iframe.style.height=iframe.contentDocument.body.scrollHeight+32+'px';
+        // Make all links open in Safari
+        iframe.contentDocument.querySelectorAll('a').forEach(a=>{
+          a.target='_blank';
+          a.rel='noopener';
+        });
+      }catch(e){}
+    };
     el.innerHTML=''; el.appendChild(iframe);
     iframe.contentDocument.open(); iframe.contentDocument.write(body); iframe.contentDocument.close();
   }else{
@@ -997,6 +1011,23 @@ function goTab(t){
   if(t==='spam')renderSpam();
 }
 function toggleP(k,id){C[k]=!C[k];saveC();qs('#'+id).className='tog'+(C[k]?' on':'');}
+function copyToken(){
+  const tok=C.g1tok;
+  if(!tok){toast('Niet verbonden — log eerst in');return;}
+  const email=C.g1email||'';
+  const txt='// Plak dit in Scriptable en voer uit:\nKeychain.set("mailrob_g1_token", "'+tok+'");\nKeychain.set("mailrob_g1_email", "'+email+'");\nconsole.log("Opgeslagen!");';
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>toast('Token code gekopieerd! Plak in Scriptable ✓')).catch(()=>fallbackCopy(txt));
+  }else{fallbackCopy(txt);}
+}
+function fallbackCopy(txt){
+  const el=document.createElement('textarea');
+  el.value=txt; el.style.cssText='position:fixed;opacity:0';
+  document.body.appendChild(el); el.focus(); el.select();
+  try{document.execCommand('copy');toast('Token code gekopieerd! Plak in Scriptable ✓');}
+  catch(e){toast('Kopiëren mislukt — probeer handmatig');}
+  document.body.removeChild(el);
+}
 function saveKeys(){const a=qs('#s-ant').value.trim(),g=qs('#s-gid').value.trim(),z=qs('#s-ziggo')&&qs('#s-ziggo').value.trim();if(a)C.ant=a;if(g)C.gid=g;if(z)C.ziggoEmail=z;saveC();toast('Opgeslagen ✓');}
 function clearCache(){if(!confirm('E-maildata wissen?'))return;inbox=[];spam=[];localStorage.removeItem('mr_sp');renderInbox();renderSpam();badges();toast('Cache gewist');}
 
