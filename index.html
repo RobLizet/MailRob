@@ -707,6 +707,11 @@ function toggleSelectEmail(id){
   qs('#select-count').textContent=n+' geselecteerd';
   renderInbox();
 }
+function toggleSelectItem(el){
+  const id=el.dataset.id;
+  if(!id)return;
+  toggleSelectEmail(id);
+}
 async function deleteSelected(){
   if(!selectedIds.size){toast('Selecteer eerst e-mails');return;}
   if(!confirm(`${selectedIds.size} e-mail(s) verwijderen?`))return;
@@ -737,12 +742,12 @@ function avatarColor(e){const c=['#6366f1','#8b5cf6','#ec4899','#ef4444','#f9731
 function fmtDate(ts){const d=new Date(ts),diff=Date.now()-ts;if(diff<60e3)return'nu';if(diff<3600e3)return Math.floor(diff/60e3)+'m';if(diff<86400e3)return d.toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'});if(diff<604800e3)return d.toLocaleDateString('nl',{weekday:'short'});return d.toLocaleDateString('nl',{day:'numeric',month:'short'});}
 function emailCard(e,onclick){
   const col=avatarColor(e.fromE);
-  const isZiggo=e.fromE&&e.fromE.toLowerCase().includes('@ziggo.nl');
+  const isZiggo=(e.to||'').toLowerCase().includes('@ziggo.nl')||(e.fromE||'').toLowerCase().includes('@ziggo.nl');
   const sc=isZiggo?'<span class="chip chip-ziggo">🟢 Ziggo</span>':e.src==='g1'?'<span class="chip chip-g1">Gmail</span>':'<span class="chip chip-g2">Gmail 2</span>';
   const sp=e.spam?'<span class="chip chip-spam">Spam</span>':'';
   const sel=selectedIds.has(e.id);
-  const clickFn=selectMode?`toggleSelectEmail('${e.id}')`:`${onclick}`;
-  return`<div class="mail-item${e.unread?' unread':''}${sel?' selected':''}" onclick="${clickFn}">
+  const clickFn=selectMode?`toggleSelectEmail(this)`:`${onclick}`;
+  return`<div class="mail-item${e.unread?' unread':''}${sel?' selected':''}" data-id="${e.id}" onclick="${selectMode?`toggleSelectItem(this)`:onclick}">
     ${!selectMode&&e.unread?'<div class="unread-dot"></div>':''}
     <div class="mail-check">${sel?'✓':''}</div>
     <div class="avatar" style="background:${col}20;color:${col}">${initials(e.from)}</div>
@@ -751,8 +756,8 @@ function emailCard(e,onclick){
 }
 function renderInbox(){
   let i=emails.filter(e=>!e.spam);
-  if(inboxFilter==='ziggo') i=i.filter(e=>e.fromE&&e.fromE.toLowerCase().includes('@ziggo.nl'));
-  if(inboxFilter==='gmail') i=i.filter(e=>!e.fromE||!e.fromE.toLowerCase().includes('@ziggo.nl'));
+  if(inboxFilter==='ziggo') i=i.filter(e=>(e.to||'').toLowerCase().includes('@ziggo.nl')||(e.fromE||'').toLowerCase().includes('@ziggo.nl'));
+  if(inboxFilter==='gmail') i=i.filter(e=>!(e.to||'').toLowerCase().includes('@ziggo.nl')&&!(e.fromE||'').toLowerCase().includes('@ziggo.nl'));
   const wrap=selectMode?'<div class="select-mode">':'';
   const wrapEnd=selectMode?'</div>':'';
   const emptyIco=inboxFilter==='ziggo'?'🟢':inboxFilter==='gmail'?'📧':'📭';
