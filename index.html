@@ -1015,18 +1015,23 @@ function copyToken(){
   const tok=C.g1tok;
   if(!tok){toast('Niet verbonden — log eerst in');return;}
   const email=C.g1email||'';
-  const txt='// Plak dit in Scriptable en voer uit:\nKeychain.set("mailrob_g1_token", "'+tok+'");\nKeychain.set("mailrob_g1_email", "'+email+'");\nconsole.log("Opgeslagen!");';
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(()=>toast('Token code gekopieerd! Plak in Scriptable ✓')).catch(()=>fallbackCopy(txt));
-  }else{fallbackCopy(txt);}
+  const txt='Keychain.set("mailrob_g1_token", "'+tok+'");\nKeychain.set("mailrob_g1_email", "'+email+'");';
+  // Show in modal so user can copy manually
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML='<div style="background:#d8f5e8;border-radius:16px;padding:20px;width:100%;max-width:400px">'
+    +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:#0a2818;margin-bottom:8px">📋 Scriptable Token</div>'
+    +'<div style="font-size:12px;color:#1e5c3a;margin-bottom:12px">Kopieer de tekst hieronder en plak in een nieuw Scriptable script. Tik daarna op Run.</div>'
+    +'<textarea style="width:100%;height:100px;background:#0a2818;color:#2ffdb0;border:none;border-radius:8px;padding:10px;font-family:monospace;font-size:11px;resize:none" id="tok-area">'+txt+'</textarea>'
+    +'<div style="margin-top:12px;display:flex;gap:8px">'
+    +'<button onclick="selTok()" style="flex:1;background:#1a7a42;color:#fff;border:none;border-radius:8px;padding:12px;font-family:DM Sans,sans-serif;font-size:14px;font-weight:600;cursor:pointer">Alles selecteren</button>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:#c0e4d2;color:#0a2818;border:none;border-radius:8px;padding:12px 16px;font-family:DM Sans,sans-serif;font-size:14px;cursor:pointer">Sluiten</button>'
+    +'</div></div>';
+  document.body.appendChild(modal);
 }
-function fallbackCopy(txt){
-  const el=document.createElement('textarea');
-  el.value=txt; el.style.cssText='position:fixed;opacity:0';
-  document.body.appendChild(el); el.focus(); el.select();
-  try{document.execCommand('copy');toast('Token code gekopieerd! Plak in Scriptable ✓');}
-  catch(e){toast('Kopiëren mislukt — probeer handmatig');}
-  document.body.removeChild(el);
+function selTok(){
+  const ta=document.getElementById('tok-area');
+  if(ta){ta.focus();ta.select();}
 }
 function saveKeys(){const a=qs('#s-ant').value.trim(),g=qs('#s-gid').value.trim(),z=qs('#s-ziggo')&&qs('#s-ziggo').value.trim();if(a)C.ant=a;if(g)C.gid=g;if(z)C.ziggoEmail=z;saveC();toast('Opgeslagen ✓');}
 function clearCache(){if(!confirm('E-maildata wissen?'))return;inbox=[];spam=[];localStorage.removeItem('mr_sp');renderInbox();renderSpam();badges();toast('Cache gewist');}
