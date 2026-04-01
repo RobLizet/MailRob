@@ -81,7 +81,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .chip-g1{background:rgba(234,67,53,.13);color:var(--g1)}
 .chip-g2{background:rgba(52,168,83,.13);color:var(--g2)}
 .chip-ol{background:rgba(0,120,212,.13);color:var(--ol)}
+.chip-ziggo{background:rgba(0,200,100,.15);color:#00c864}
 .chip-spam{background:rgba(255,92,92,.13);color:var(--danger)}
+
+/* INBOX FILTER */
+.inbox-filter{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg)}
+.if-btn{flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--sub);background:var(--s1);border:1px solid var(--border);transition:all .15s}
+.if-btn.active{background:var(--teal-dim);color:var(--teal);border-color:var(--teal)}
 
 /* FOLDERS */
 .folder-list{padding:12px 14px}
@@ -237,8 +243,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <div class="hdr-btn" onclick="openCompose()">✏️</div>
   </div>
   <div class="content">
-    <div class="tab active" id="tab-inbox"><div id="inbox-body"><div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div></div></div>
+    <div class="tab active" id="tab-inbox">
+      <div class="inbox-filter">
+        <div class="if-btn active" id="if-all" onclick="setInboxFilter('all')">Alles</div>
+        <div class="if-btn" id="if-gmail" onclick="setInboxFilter('gmail')">📧 Gmail</div>
+        <div class="if-btn" id="if-ziggo" onclick="setInboxFilter('ziggo')">🟢 Ziggo</div>
+      </div>
+      <div id="inbox-body"><div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div></div>
+    </div>
     <div class="tab" id="tab-spam"><div id="spam-body"><div class="empty"><div class="empty-ico">🛡️</div><div class="empty-t">Geen spam gevonden</div><div class="empty-s">AI analyseert automatisch</div></div></div></div>
+    <div class="tab" id="tab-sent"><div id="sent-body"><div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div></div></div>
+    <div class="tab" id="tab-trash"><div id="trash-body"><div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div></div></div>
     <div class="tab" id="tab-folders"><div class="folder-list" id="folder-list"></div></div>
     <div class="tab" id="tab-settings">
       <div class="set-sect">
@@ -278,9 +293,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       <span>Inbox</span><div class="ni-badge" id="nb-inbox"></div>
     </div>
-    <div class="ni" data-tab="spam" onclick="switchTab('spam')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span>Spam</span><div class="ni-badge" id="nb-spam"></div>
+    <div class="ni" data-tab="sent" onclick="switchTab('sent')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      <span>Verzonden</span>
+    </div>
+    <div class="ni" data-tab="trash" onclick="switchTab('trash')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      <span>Prullenbak</span>
     </div>
     <div class="ni" data-tab="folders" onclick="switchTab('folders')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -553,6 +572,38 @@ async function gFetch(url,tok,n){
 }
 function refreshEmails(){emails=[];fetchEmails();}
 
+async function fetchSent(){
+  qs('#sent-body').innerHTML=`<div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div>`;
+  const results=[];
+  if(C.g1token){const r=await fetchGmailFolder('g1',C.g1token,'SENT');results.push(...r);}
+  if(C.g2token){const r=await fetchGmailFolder('g2',C.g2token,'SENT');results.push(...r);}
+  results.sort((a,b)=>b.date-a.date);
+  qs('#sent-body').innerHTML=results.length?results.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">📤</div><div class="empty-t">Geen verzonden e-mails</div></div>`;
+}
+
+async function fetchTrash(){
+  qs('#trash-body').innerHTML=`<div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div>`;
+  const results=[];
+  if(C.g1token){const r=await fetchGmailFolder('g1',C.g1token,'TRASH');results.push(...r);}
+  if(C.g2token){const r=await fetchGmailFolder('g2',C.g2token,'TRASH');results.push(...r);}
+  results.sort((a,b)=>b.date-a.date);
+  qs('#trash-body').innerHTML=results.length?results.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">🗑️</div><div class="empty-t">Prullenbak is leeg</div></div>`;
+}
+
+async function fetchGmailFolder(src,tok,label){
+  try{
+    const n=src==='g1'?1:2;
+    const r=await gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&labelIds=${label}`,tok,n);
+    if(!r||!r.messages)return[];
+    const msgs=await Promise.all(r.messages.slice(0,15).map(m=>gFetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`,tok,n)));
+    return msgs.filter(Boolean).map(m=>{
+      const h={};(m.payload?.headers||[]).forEach(x=>h[x.name]=x.value);
+      const[,fn,fe]=(h.From||'').match(/^(.*?)\s*<(.+)>$/)||[,'',''];
+      return{id:src+'_'+label+'_'+m.id,rawId:m.id,src,from:fn?fn.replace(/"/g,'').trim():(fe||h.From||'?'),fromE:fe||h.From||'',to:h.To||'',sub:h.Subject||'(geen onderwerp)',prev:m.snippet||'',date:+(m.internalDate||Date.now()),unread:false,spam:false};
+    });
+  }catch(e){return[];}
+}
+
 // ══════════════════════════════════════
 // SPAM
 // ══════════════════════════════════════
@@ -632,7 +683,14 @@ function moveToFolder(fid){
   closeDetail();toast(`Verplaatst naar ${f.emoji} ${f.name}`);
 }
 
-let selectMode=false, selectedIds=new Set();
+let selectMode=false, selectedIds=new Set(), inboxFilter='all';
+
+function setInboxFilter(f){
+  inboxFilter=f;
+  document.querySelectorAll('.if-btn').forEach(b=>b.classList.remove('active'));
+  qs('#if-'+f).classList.add('active');
+  renderInbox();
+}
 
 function toggleSelectMode(){
   selectMode=!selectMode;
@@ -679,7 +737,8 @@ function avatarColor(e){const c=['#6366f1','#8b5cf6','#ec4899','#ef4444','#f9731
 function fmtDate(ts){const d=new Date(ts),diff=Date.now()-ts;if(diff<60e3)return'nu';if(diff<3600e3)return Math.floor(diff/60e3)+'m';if(diff<86400e3)return d.toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'});if(diff<604800e3)return d.toLocaleDateString('nl',{weekday:'short'});return d.toLocaleDateString('nl',{day:'numeric',month:'short'});}
 function emailCard(e,onclick){
   const col=avatarColor(e.fromE);
-  const sc=e.src==='g1'?'<span class="chip chip-g1">Gmail 1</span>':e.src==='g2'?'<span class="chip chip-g2">Gmail 2</span>':'<span class="chip chip-ol">Outlook</span>';
+  const isZiggo=e.fromE&&e.fromE.toLowerCase().includes('@ziggo.nl');
+  const sc=isZiggo?'<span class="chip chip-ziggo">🟢 Ziggo</span>':e.src==='g1'?'<span class="chip chip-g1">Gmail</span>':'<span class="chip chip-g2">Gmail 2</span>';
   const sp=e.spam?'<span class="chip chip-spam">Spam</span>':'';
   const sel=selectedIds.has(e.id);
   const clickFn=selectMode?`toggleSelectEmail('${e.id}')`:`${onclick}`;
@@ -691,10 +750,13 @@ function emailCard(e,onclick){
   </div>`;
 }
 function renderInbox(){
-  const i=emails.filter(e=>!e.spam);
+  let i=emails.filter(e=>!e.spam);
+  if(inboxFilter==='ziggo') i=i.filter(e=>e.fromE&&e.fromE.toLowerCase().includes('@ziggo.nl'));
+  if(inboxFilter==='gmail') i=i.filter(e=>!e.fromE||!e.fromE.toLowerCase().includes('@ziggo.nl'));
   const wrap=selectMode?'<div class="select-mode">':'';
   const wrapEnd=selectMode?'</div>':'';
-  qs('#inbox-body').innerHTML=i.length?(wrap+i.map(e=>emailCard(e,`openEmail('${e.id}')`)).join('')+wrapEnd):`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Inbox leeg</div></div>`;
+  const emptyIco=inboxFilter==='ziggo'?'🟢':inboxFilter==='gmail'?'📧':'📭';
+  qs('#inbox-body').innerHTML=i.length?(wrap+i.map(e=>emailCard(e,`openEmail('${e.id}')`)).join('')+wrapEnd):`<div class="empty"><div class="empty-ico">${emptyIco}</div><div class="empty-t">Geen e-mails</div></div>`;
 }
 function renderSpam(){qs('#spam-body').innerHTML=spamList.length?spamList.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">🛡️</div><div class="empty-t">Geen spam gevonden</div></div>`;}
 function updateBadges(){
@@ -820,7 +882,7 @@ async function claudeAPI(sys,msg){const r=await fetch('https://api.anthropic.com
 // ══════════════════════════════════════
 // NAV & SETTINGS
 // ══════════════════════════════════════
-const TABS={inbox:'Inbox',spam:'Spam',folders:'Mappen',settings:'Instellingen'};
+const TABS={inbox:'Inbox',sent:'Verzonden',trash:'Prullenbak',spam:'Spam',folders:'Mappen',settings:'Instellingen'};
 function switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('active',n.dataset.tab===tab));
@@ -830,6 +892,8 @@ function switchTab(tab){
   qs('#hdr-refresh').style.display=tab==='inbox'?'flex':'none';
   qs('#hdr-select').style.display=tab==='inbox'?'flex':'none';
   if(tab!=='inbox')cancelSelect();
+  if(tab==='sent')fetchSent();
+  if(tab==='trash')fetchTrash();
 }
 function togglePref(k,id){C[k]=!C[k];saveC();qs('#'+id).className='toggle'+(C[k]?' on':'');}
 function saveKeys(){const a=qs('#s-ant').value.trim(),g=qs('#s-gid').value.trim();if(a)C.ant=a;if(g)C.gid=g;saveC();toast('Opgeslagen ✓');}
