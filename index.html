@@ -393,7 +393,7 @@ let C={ant:'',gid:'',mid:'',
   primaryAccount:'g1',
   spamFilter:true,aiEnabled:true,selAccount:null
 };
-let emails=[],spamList=[],folderEmails={},folders=[],curEmail=null,aiText='',curFolderView=null;
+let emails=[],spamList=[],folderEmails={},folders=[],sentEmails=[],trashEmails=[],curEmail=null,aiText='',curFolderView=null;
 let pendingAuthN=null; // which account (1 or 2) is being re-authed
 
 // ══════════════════════════════════════
@@ -574,20 +574,20 @@ function refreshEmails(){emails=[];fetchEmails();}
 
 async function fetchSent(){
   qs('#sent-body').innerHTML=`<div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div>`;
-  const results=[];
-  if(C.g1token){const r=await fetchGmailFolder('g1',C.g1token,'SENT');results.push(...r);}
-  if(C.g2token){const r=await fetchGmailFolder('g2',C.g2token,'SENT');results.push(...r);}
-  results.sort((a,b)=>b.date-a.date);
-  qs('#sent-body').innerHTML=results.length?results.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">📤</div><div class="empty-t">Geen verzonden e-mails</div></div>`;
+  sentEmails=[];
+  if(C.g1token){const r=await fetchGmailFolder('g1',C.g1token,'SENT');sentEmails.push(...r);}
+  if(C.g2token){const r=await fetchGmailFolder('g2',C.g2token,'SENT');sentEmails.push(...r);}
+  sentEmails.sort((a,b)=>b.date-a.date);
+  qs('#sent-body').innerHTML=sentEmails.length?sentEmails.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">📤</div><div class="empty-t">Geen verzonden e-mails</div></div>`;
 }
 
 async function fetchTrash(){
   qs('#trash-body').innerHTML=`<div class="spin-wrap"><div class="spin"></div><span>Laden...</span></div>`;
-  const results=[];
-  if(C.g1token){const r=await fetchGmailFolder('g1',C.g1token,'TRASH');results.push(...r);}
-  if(C.g2token){const r=await fetchGmailFolder('g2',C.g2token,'TRASH');results.push(...r);}
-  results.sort((a,b)=>b.date-a.date);
-  qs('#trash-body').innerHTML=results.length?results.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">🗑️</div><div class="empty-t">Prullenbak is leeg</div></div>`;
+  trashEmails=[];
+  if(C.g1token){const r=await fetchGmailFolder('g1',C.g1token,'TRASH');trashEmails.push(...r);}
+  if(C.g2token){const r=await fetchGmailFolder('g2',C.g2token,'TRASH');trashEmails.push(...r);}
+  trashEmails.sort((a,b)=>b.date-a.date);
+  qs('#trash-body').innerHTML=trashEmails.length?trashEmails.map(e=>emailCard(e,`openEmail('${e.id}')`)).join(''):`<div class="empty"><div class="empty-ico">🗑️</div><div class="empty-t">Prullenbak is leeg</div></div>`;
 }
 
 async function fetchGmailFolder(src,tok,label){
@@ -746,13 +746,14 @@ function emailCard(e,onclick){
   const sc=isZiggo?'<span class="chip chip-ziggo">🟢 Ziggo</span>':e.src==='g1'?'<span class="chip chip-g1">Gmail</span>':'<span class="chip chip-g2">Gmail 2</span>';
   const sp=e.spam?'<span class="chip chip-spam">Spam</span>':'';
   const sel=selectedIds.has(e.id);
-  const clickFn=selectMode?`toggleSelectEmail(this)`:`${onclick}`;
-  return`<div class="mail-item${e.unread?' unread':''}${sel?' selected':''}" data-id="${e.id}" onclick="${selectMode?`toggleSelectItem(this)`:onclick}">
-    ${!selectMode&&e.unread?'<div class="unread-dot"></div>':''}
-    <div class="mail-check">${sel?'✓':''}</div>
-    <div class="avatar" style="background:${col}20;color:${col}">${initials(e.from)}</div>
-    <div class="mi-body"><div class="mi-top"><div class="mi-from">${esc(e.from)}</div><div class="mi-time">${fmtDate(e.date)}</div></div><div class="mi-subject">${esc(e.sub)}</div><div class="mi-foot">${sc}${sp}<span class="mi-preview">${esc((e.prev||'').slice(0,60))}</span></div></div>
-  </div>`;
+  const clickAttr=selectMode?'toggleSelectItem(this)':onclick;
+  return'<div class="mail-item'+(e.unread?' unread':'')+(sel?' selected':'')+'" data-id="'+e.id+'" onclick="'+clickAttr+'">'
+    +(!selectMode&&e.unread?'<div class="unread-dot"></div>':'')
+    +'<div class="mail-check">'+(sel?'✓':'')+'</div>'
+    +'<div class="avatar" style="background:'+col+'20;color:'+col+'">'+initials(e.from)+'</div>'
+    +'<div class="mi-body"><div class="mi-top"><div class="mi-from">'+esc(e.from)+'</div><div class="mi-time">'+fmtDate(e.date)+'</div></div>'
+    +'<div class="mi-subject">'+esc(e.sub)+'</div>'
+    +'<div class="mi-foot">'+sc+sp+'<span class="mi-preview">'+esc((e.prev||'').slice(0,60))+'</span></div></div></div>';
 }
 function renderInbox(){
   let i=emails.filter(e=>!e.spam);
@@ -775,7 +776,7 @@ function updateBadges(){
 // EMAIL DETAIL
 // ══════════════════════════════════════
 async function openEmail(id,fromFolder=false,fid=null){
-  let e=emails.find(x=>x.id===id)||spamList.find(x=>x.id===id);
+  let e=emails.find(x=>x.id===id)||spamList.find(x=>x.id===id)||sentEmails.find(x=>x.id===id)||trashEmails.find(x=>x.id===id);
   if(!e){for(const fl of Object.keys(folderEmails)){const f=(folderEmails[fl]||[]).find(x=>x.id===id);if(f){e=f;break;}}}
   if(!e)return;
   curEmail=e;e.unread=false;renderInbox();updateBadges();
