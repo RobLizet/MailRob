@@ -685,7 +685,11 @@ function card(e){
     +'</div></div>';
 }
 
-function makeCards(arr){return arr.map(e=>card(e)).join('');}
+function makeCards(arr){
+  const wrap=selMode?'<div class="selmode">':'';
+  const wend=selMode?'</div>':'';
+  return wrap+arr.map(e=>card(e)).join('')+wend;
+}
 
 function setFilter(f){
   inboxFilter=f;
@@ -856,10 +860,17 @@ function reRenderCurrent(){
   const id=t.id.replace('tab-','');
   if(id==='inbox')renderInbox();
   else if(id==='spam')renderSpam();
-  else if(id==='sent')qs('#sent-body').innerHTML=sent.length?makeCards(sent):'<div class="empty"><div class="eico">📤</div><div class="et">Geen verzonden e-mails</div></div>';
-  else if(id==='trash')loadTrash();
+  else if(id==='sent'){
+    const el=qs('#sent-body');
+    if(el)el.innerHTML=sent.length?makeCards(sent):'<div class="empty"><div class="eico">📤</div><div class="et">Geen verzonden e-mails</div></div>';
+  }
+  else if(id==='trash'){
+    const el=qs('#trash-body');
+    if(el&&trash.length)el.innerHTML=makeCards(trash);
+    else if(el)el.innerHTML='<div class="empty"><div class="eico">🗑️</div><div class="et">Prullenbak is leeg</div></div>';
+  }
 }
-function toggleSelItem(id){if(selected.has(id))selected.delete(id);else selected.add(id);qs('#selcount').textContent=selected.size+' geselecteerd';renderInbox();}
+function toggleSelItem(id){if(selected.has(id))selected.delete(id);else selected.add(id);qs('#selcount').textContent=selected.size+' geselecteerd';reRenderCurrent();}
 async function deleteSelected(){
   if(!selected.size){toast('Selecteer eerst e-mails');return;}
   if(!confirm(selected.size+' e-mail(s) verwijderen?'))return;
