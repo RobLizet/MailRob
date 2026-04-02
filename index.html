@@ -477,8 +477,33 @@ function directLogin(n){
 }
 
 function startApp(){
-  qs('#setup').style.display='none'; qs('#app').style.display='flex';
-  updateUI(); renderFolders(); fetchEmails(); prefSet();
+  qs('#setup').style.display='none'; qs('#app').innerHTML = `
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="logo-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+        </svg>
+      </div>
+      <h1 style="font-family:'Syne',sans-serif;margin-bottom:8px">MailRob</h1>
+      <p style="opacity:.6;margin-bottom:24px">Log in op je e-mail</p>
+      
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <input type="email" id="li-e" placeholder="E-mailadres" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--border)">
+        <input type="password" id="li-p" placeholder="Wachtwoord" style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--border)">
+        <button onclick="doLogin()" class="btn-primary" style="width:100%;padding:12px;background:var(--teal);color:white;border:none;border-radius:8px;font-weight:600">Inloggen</button>
+        
+        <div style="margin:5px 0;opacity:.4;font-size:12px;text-align:center">OF</div>
+
+        <button type="button" onclick="loginOutlook()" style="width:100%;padding:12px;background:#0078d4;color:white;border:none;border-radius:8px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">
+          <svg style="width:18px" viewBox="0 0 24 24" fill="currentColor"><path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z"/></svg>
+          Outlook
+        </button>
+      </div>
+    </div>
+  </div>
+`;
+
 }
 
 function saveSetup(){
