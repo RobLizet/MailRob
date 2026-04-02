@@ -11,6 +11,9 @@
 <link id="manifest-link">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -214,6 +217,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <input type="text" class="fi" id="su-gid" placeholder="123456789-abc.apps.googleusercontent.com">
     <p style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5">Één Client ID voor beide Gmail accounts</p>
   </div>
+	<button type="button" onclick="loginOutlook()" style="background-color: #0078d4; margin-top: 10px;">
+    Inloggen met Outlook
+</button>
   <button class="bp" onclick="saveSetup()" ontouchend="saveSetup();event.preventDefault()">Opslaan &amp; Starten →</button>
   <p class="sn">API keys worden lokaal opgeslagen op je iPhone.</p>
   <button onclick="hardReset()" style="margin-top:16px;background:none;border:none;color:var(--danger);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-decoration:underline;opacity:.7">Alles wissen en opnieuw beginnen</button>
@@ -1088,6 +1094,56 @@ let tt;
 function toast(msg){const t=qs('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800);}
 
 init();
+// // --- Microsoft Outlook Configuratie ---
+const msalConfig = {
+    auth: {
+        clientId: "5717b445-f820-4548-9c59-c65eccc41900", // Jouw ID van de screenshot
+        authority: "https://login.microsoftonline.com/common",
+        redirectUri: "https://roblizet.github.io/MailRob/"
+				// VUL HIER JE GITHUB LINK IN
+    },
+    cache: {
+        cacheLocation: "localStorage", // DIT voorkomt dat je elk uur opnieuw moet inloggen!
+        storeAuthStateInCookie: true
+    }
+};
+
+const myMSALObj = new msal.PublicClientApplication(msalConfig);
+
+// Functie om in te loggen
+async function loginOutlook() {
+    try {
+        const loginRequest = {
+            scopes: ["openid", "profile", "Mail.Read", "offline_access"]
+        };
+        const response = await myMSALObj.loginPopup(loginRequest);
+        console.log("Outlook Login geslaagd:", response);
+        
+        // Verberg jouw login-scherm en toon de mail-app (zoals in jouw originele code)
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('email-app').style.display = 'block';
+        
+        alert("Ingelogd als: " + response.account.username);
+    } catch (error) {
+        console.error("Outlook fout:", error);
+    }
+}
+
+// Deze functie gebruik je later om stilletjes een nieuw token te halen
+async function getOutlookToken() {
+    const accounts = myMSALObj.getAllAccounts();
+    if (accounts.length > 0) {
+        const silentRequest = { scopes: ["Mail.Read"], account: accounts[0] };
+        try {
+            const tokenResponse = await myMSALObj.acquireTokenSilent(silentRequest);
+            return tokenResponse.accessToken;
+        } catch (e) {
+            return null;
+        }
+    }
+    return null;
+}
+
 </script>
 </body>
 </html>
