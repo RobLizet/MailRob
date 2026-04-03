@@ -216,10 +216,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <input type="text" class="fi" id="su-gid" placeholder="123456789-abc.apps.googleusercontent.com">
     <p style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5">Één Client ID voor beide Gmail accounts</p>
   </div>
-  <div class="sc">
-    <h3>💙 Microsoft Client ID (Outlook - optioneel)</h3>
-    <input type="text" class="fi" id="su-mid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-  </div>
   <button class="bp" onclick="saveSetup()" ontouchend="saveSetup();event.preventDefault()">Opslaan &amp; Starten →</button>
   <p class="sn">API keys worden lokaal opgeslagen op je iPhone.</p>
   <button onclick="hardReset()" style="margin-top:16px;background:none;border:none;color:var(--danger);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-decoration:underline;opacity:.7">Alles wissen en opnieuw beginnen</button>
@@ -261,10 +257,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
           <div><div class="slb">📧 Gmail</div><div class="ssub" id="g1st">Niet verbonden</div></div>
           <div id="g1btn"><button class="bcn bg1" onclick="connectG(1)">Verbinden</button></div>
         </div>
-        <div class="srow">
-          <div><div class="slb">💙 Outlook</div><div class="ssub" id="olst">Niet verbonden</div></div>
-          <div id="olbtn"><button class="bcn bol" onclick="connectOL()">Verbinden</button></div>
-        </div>
+
       </div>
       <div class="sset">
         <div class="sttl">AI Functies</div>
@@ -275,8 +268,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <div class="sttl">API Sleutels bijwerken</div>
         <input type="password" class="sinp" id="s-ant" placeholder="Anthropic API Key">
         <input type="text" class="sinp" id="s-gid" placeholder="Google Client ID">
-        <input type="text" class="sinp" id="s-mid" placeholder="Microsoft Client ID (Outlook)">
         <input type="email" class="sinp" id="s-ziggo" placeholder="Ziggo e-mailadres (rhjborghouts@ziggo.nl)">
+        <input type="email" class="sinp" id="s-ol" placeholder="Outlook e-mailadres (r.borghouts@outlook.com)">
         <button class="bp" style="margin-top:10px" ontouchend="event.preventDefault();saveKeys()" onclick="saveKeys()">Opslaan</button>
       </div>
       <div class="sset">
@@ -389,7 +382,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 // ══════════════════════════════════
 const REDIR = location.origin + location.pathname;
 const GSCOPE = 'https://mail.google.com/';
-const MS_SCOPE = 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access';
 const DFOLDERS = [
   {id:'werk',   name:'Werk',          emoji:'💼', color:'#4da6ff'},
   {id:'belang', name:'Belangrijk',    emoji:'⭐', color:'#eab308'},
@@ -398,7 +390,7 @@ const DFOLDERS = [
   {id:'archief',name:'Archief',       emoji:'📁', color:'#6a80a0'},
 ];
 
-let C = {ant:'',gid:'',mid:'',g1tok:null,g1email:'',g1exp:0,oltok:null,olemail:'',olexp:0,ziggoEmail:'rhjborghouts@ziggo.nl',spamFilter:true,aiEnabled:true,selAcc:null,selFrom:null};
+let C = {ant:'',gid:'',g1tok:null,g1email:'',g1exp:0,ziggoEmail:'rhjborghouts@ziggo.nl',outlookEmail:'r.borghouts@outlook.com',spamFilter:true,aiEnabled:true,selAcc:null,selFrom:null};
 let inbox=[], spam=[], sent=[], trash=[], fEmails={}, folders=[], cur=null, aiTxt='', curFV=null;
 let selMode=false, selected=new Set(), inboxFilter='all', pendingN=null;
 
@@ -422,7 +414,7 @@ function init(){
     const expT = Date.now()+(exp*1000);
     if(st==='g1'){C.g1tok=tok;C.g1exp=expT;}
     if(st==='g2'){C.g2tok=tok;C.g2exp=expT;}
-    if(st==='ol'){C.oltok=tok;C.olexp=expT;getOLEmail(tok);}
+
     saveC(); history.replaceState(null,'',location.pathname);
   }
   try{const s=localStorage.getItem('mr_c');if(s)Object.assign(C,JSON.parse(s));}catch(e){}
@@ -456,10 +448,9 @@ function init(){
 }
 
 function checkExp(){
-  const now=Date.now(), g1x=C.g1tok&&C.g1exp&&C.g1exp<now, g2x=false, olx=C.oltok&&C.olexp&&C.olexp<now;
+  const now=Date.now(), g1x=C.g1tok&&C.g1exp&&C.g1exp<now, g2x=false;
   // Also check if token will expire in next 5 minutes — proactive warning
   const g1soon=C.g1tok&&C.g1exp&&(C.g1exp-now)<5*60*1000&&(C.g1exp-now)>0;
-  if(olx){C.oltok=null;saveC();}
   if(g1x){
     C.g1tok=null; saveC(); updateUI();
     qs('#smsg').textContent='⚠️ Sessie verlopen — tik om opnieuw in te loggen';
@@ -497,17 +488,18 @@ function startApp(){
 }
 
 function saveSetup(){
-  const a=qs('#su-ant').value.trim(), g=qs('#su-gid').value.trim(), m=qs('#su-mid')&&qs('#su-mid').value.trim();
+  const a=qs('#su-ant').value.trim(), g=qs('#su-gid').value.trim();
   if(!a&&!g){toast('Vul minstens één sleutel in');return;}
-  C.ant=a; C.gid=g; if(m)C.mid=m; saveC(); startApp();
+  C.ant=a; C.gid=g; saveC(); startApp();
 }
 
 function hardReset(){if(!confirm('Alles wissen?'))return;localStorage.clear();location.reload();}
 function saveC(){localStorage.setItem('mr_c',JSON.stringify(C));}
 function saveF(){localStorage.setItem('mr_fd',JSON.stringify(folders));localStorage.setItem('mr_fe',JSON.stringify(fEmails));}
 function prefSet(){
-  if(C.ant)qs('#s-ant').value=C.ant; if(C.gid)qs('#s-gid').value=C.gid; if(C.mid&&qs('#s-mid'))qs('#s-mid').value=C.mid;
+  if(C.ant)qs('#s-ant').value=C.ant; if(C.gid)qs('#s-gid').value=C.gid;
   if(C.ziggoEmail&&qs('#s-ziggo'))qs('#s-ziggo').value=C.ziggoEmail;
+  if(C.outlookEmail&&qs('#s-ol'))qs('#s-ol').value=C.outlookEmail;
   qs('#tog-spam').className='tog'+(C.spamFilter?' on':'');
   qs('#tog-ai').className='tog'+(C.aiEnabled?' on':'');
 }
@@ -531,30 +523,6 @@ function doLogin(){
 }
 function closeAuth(){qs('#ov-auth').classList.remove('open');pendingN=null;}
 
-function connectOL(){
-  if(!C.mid){toast('Voer eerst een Microsoft Client ID in en sla op');goTab('settings');return;}
-  const hint=C.olemail?'&login_hint='+encodeURIComponent(C.olemail):'&prompt=select_account';
-  const url='https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
-    +'?client_id='+encodeURIComponent(C.mid)
-    +'&redirect_uri='+encodeURIComponent(REDIR)
-    +'&response_type=token'
-    +'&scope='+encodeURIComponent(MS_SCOPE)
-    +'&state=ol'
-    +hint;
-  location.href=url;
-}
-function disconnectOL(){
-  if(!confirm('Outlook loskoppelen?'))return;
-  C.oltok=null;C.olemail='';C.olexp=0;
-  inbox=inbox.filter(e=>e.src!=='ol');
-  saveC();updateUI();renderInbox();badges();toast('Outlook losgekoppeld');
-}
-async function getOLEmail(tok){
-  try{
-    const r=await fetch('https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName',{headers:{Authorization:'Bearer '+tok}});
-    if(r.ok){const d=await r.json();C.olemail=d.mail||d.userPrincipalName||'';saveC();updateUI();toast('Outlook verbonden ✓');if(qs('#app').style.display!=='none')fetchEmails();}
-  }catch(e){}
-}
 function disconnectG(n){
   if(!confirm('Gmail '+n+' loskoppelen?'))return;
   C.g1tok=null;C.g1email='';C.g1exp=0;inbox=inbox.filter(e=>e.src!=='g1');
@@ -578,25 +546,20 @@ function updateUI(){
     qs('#'+bid).innerHTML=tok?'<button class="bcn bdis" onclick="disconnectG('+n+')">Verbreken</button>':'<button class="bcn '+cls+'" onclick="connectG('+n+')">'+(email?'Herverbinden':'Verbinden')+'</button>';
   };
   sr(1,C.g1tok,C.g1email,C.g1exp,'g1st','g1btn','bg1');
-  // Outlook
-  if(qs('#olst')){
-    qs('#olst').textContent=C.oltok?(C.olemail||'Verbonden ✓')+(C.olexp?' · verloopt '+new Date(C.olexp).toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'}):''):'Niet verbonden';
-    qs('#olst').style.color=C.oltok?'var(--teal)':'';}
-  if(qs('#olbtn'))qs('#olbtn').innerHTML=C.oltok?'<button class="bcn bdis" onclick="disconnectOL()">Verbreken</button>':'<button class="bcn bol" onclick="connectOL()">'+(C.olemail?'Herverbinden':'Verbinden')+'</button>';
+
 }
 
 // ══════════════════════════════════
 // FETCH EMAILS
 // ══════════════════════════════════
 async function fetchEmails(){
-  if(!C.g1tok&&!C.oltok){
+  if(!C.g1tok){
     qs('#inbox-body').innerHTML='<div class="empty"><div class="eico">📭</div><div class="et">Geen accounts verbonden</div><div class="es">Ga naar Instellingen</div></div>';
     return;
   }
   qs('#inbox-body').innerHTML='<div class="spw"><div class="spin"></div><span>E-mails ophalen...</span></div>';
   const jobs=[];
   if(C.g1tok) jobs.push(gmailFetch('g1',C.g1tok));
-  if(C.oltok) jobs.push(outlookFetch());
   const results=await Promise.allSettled(jobs);
   const fresh=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
   const ids=new Set(inbox.map(e=>e.id));
@@ -638,23 +601,6 @@ async function fetchFolder(src,tok,label){
   }catch(e){return[];}
 }
 
-async function outlookFetch(){
-  try{
-    const r=await fetch('https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=20&$select=id,subject,from,toRecipients,receivedDateTime,bodyPreview,isRead',{headers:{Authorization:'Bearer '+C.oltok}});
-    if(r.status===401){C.oltok=null;saveC();updateUI();return[];}
-    if(!r.ok)return[];
-    const d=await r.json();
-    return(d.value||[]).map(m=>({
-      id:'ol_'+m.id,rawId:m.id,src:'ol',
-      from:m.from?.emailAddress?.name||m.from?.emailAddress?.address||'?',
-      fromE:m.from?.emailAddress?.address||'',
-      to:(m.toRecipients||[]).map(x=>x.emailAddress?.address).join(', '),
-      sub:m.subject||'(geen onderwerp)',prev:m.bodyPreview||'',
-      date:new Date(m.receivedDateTime).getTime(),
-      unread:!m.isRead,spam:false
-    }));
-  }catch(e){return[];}
-}
 async function gf(url,tok,n){
   try{
     const r=await fetch(url,{headers:{Authorization:'Bearer '+tok}});
@@ -737,10 +683,12 @@ function avc(e){const c=['#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316','#22c
 function fdt(ts){const d=new Date(ts),df=Date.now()-ts;if(df<60e3)return'nu';if(df<3600e3)return Math.floor(df/60e3)+'m';if(df<86400e3)return d.toLocaleTimeString('nl',{hour:'2-digit',minute:'2-digit'});if(df<604800e3)return d.toLocaleDateString('nl',{weekday:'short'});return d.toLocaleDateString('nl',{day:'numeric',month:'short'});}
 
 function isZ(e){return(e.to||'').toLowerCase().includes('@ziggo.nl')||(e.fromE||'').toLowerCase().includes('@ziggo.nl');}
+function isOutlook(e){const ol=(C.outlookEmail||'r.borghouts@outlook.com').toLowerCase();return(e.to||'').toLowerCase().includes(ol)||(e.fromE||'').toLowerCase().includes(ol)||(e.fromE||'').toLowerCase().includes('@outlook.com')||(e.fromE||'').toLowerCase().includes('@hotmail.com')||(e.to||'').toLowerCase().includes('@outlook.com');}
 
 function card(e){
   const col=avc(e.fromE);
-  const chp=isZ(e)?'<span class="chip cziggo">🟢 Ziggo</span>':e.src==='ol'?'<span class="chip col">💙 Outlook</span>':'<span class="chip cg1">Gmail</span>';
+  const isOL=isOutlook(e);
+  const chp=isZ(e)?'<span class="chip cziggo">🟢 Ziggo</span>':isOL?'<span class="chip col">💙 Outlook</span>':'<span class="chip cg1">Gmail</span>';
   const sp=e.spam?'<span class="chip cspam">Spam</span>':'';
   const sel=selected.has(e.id);
   return '<div class="mi'+(e.unread?' unread':'')+(sel?' sel':'')+'" data-eid="'+e.id+'">'
@@ -771,7 +719,7 @@ function renderInbox(){
   let i=inbox.filter(e=>!e.spam);
   if(inboxFilter==='ziggo') i=i.filter(e=>isZ(e));
   if(inboxFilter==='all') i=i.filter(e=>e.src!=='ol'&&!isZ(e));
-  if(inboxFilter==='ol') i=i.filter(e=>e.src==='ol');
+  if(inboxFilter==='ol') i=i.filter(e=>isOutlook(e));
   const wrap=selMode?'<div class="selmode">':'';
   const wend=selMode?'</div>':'';
   const ico=inboxFilter==='ziggo'?'🟢':inboxFilter==='ol'?'💙':'📧';
@@ -794,7 +742,7 @@ async function openEmail(id){
   if(!e){for(const k of Object.keys(fEmails)){const f=(fEmails[k]||[]).find(x=>x.id===id);if(f){e=f;break;}}}
   if(!e)return;
   cur=e; e.unread=false; renderInbox(); badges();
-  const acc=e.src==='ol'?('💙 Outlook'+(C.olemail?' ('+C.olemail+')':'')):'📧 Gmail'+(C.g1email?' ('+C.g1email+')':'');
+  const acc=isOutlook(e)?('💙 Outlook'+(C.outlookEmail?' ('+C.outlookEmail+')':'')):'📧 Gmail'+(C.g1email?' ('+C.g1email+')':'');
   qs('#det-hdr').textContent=acc;
   const fp=folders.map(f=>'<div class="mopt" data-fid="'+f.id+'"><span style="font-size:18px;width:28px;text-align:center">'+f.emoji+'</span><span>'+esc(f.name)+'</span></div>').join('');
   qs('#det-body').innerHTML=
@@ -819,20 +767,14 @@ async function openEmail(id){
   qs('#ov-detail').classList.add('open');
 
   const n=e.src==='g1'?1:2;
-  const tok=e.src==='ol'?C.oltok:C.g1tok;
+  const tok=C.g1tok;
   let body='', isHtml=false;
   try{
     if(tok){
-      if(e.src==='ol'){
-        const r=await fetch('https://graph.microsoft.com/v1.0/me/messages/'+e.rawId+'?$select=body',{headers:{Authorization:'Bearer '+tok}});
-        if(r.ok){const j=await r.json();body=j.body?.content||e.prev;isHtml=j.body?.contentType==='html';}
-        fetch('https://graph.microsoft.com/v1.0/me/messages/'+e.rawId,{method:'PATCH',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({isRead:true})}).catch(()=>{});
-      } else {
-        const d=await gf('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+e.rawId+'?format=full',tok,n);
-        body=d?exBody(d.payload):e.prev;
-        isHtml=body.includes('<')&&(body.includes('<div')||body.includes('<p')||body.includes('<table'));
-        fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+e.rawId+'/modify',{method:'POST',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({removeLabelIds:['UNREAD']})}).catch(()=>{});
-      }
+      const d=await gf('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+e.rawId+'?format=full',tok,n);
+      body=d?exBody(d.payload):e.prev;
+      isHtml=body.includes('<')&&(body.includes('<div')||body.includes('<p')||body.includes('<table'));
+      fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+e.rawId+'/modify',{method:'POST',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({removeLabelIds:['UNREAD']})}).catch(()=>{});
     }else{body=e.prev;}
   }catch(err){body=e.prev;}
 
@@ -1048,17 +990,20 @@ function openCompose(pre){
   const fromRow=qs('#from-row');
   const gmailAddr=C.g1email||'Gmail adres';
   const ziggoAddr=C.ziggoEmail||'rhjborghouts@ziggo.nl';
+  const olAddr=C.outlookEmail||'r.borghouts@outlook.com';
   fromRow.innerHTML=
     '<div class="achip on1" id="from-gmail" onclick="setFrom(\'gmail\')" style="font-size:11px">📧 '+gmailAddr+'</div>'
-    +'<div class="achip" id="from-ziggo" onclick="setFrom(\'ziggo\')" style="font-size:11px">🟢 '+ziggoAddr+'</div>';
+    +'<div class="achip" id="from-ziggo" onclick="setFrom(\'ziggo\')" style="font-size:11px">🟢 '+ziggoAddr+'</div>'
+    +'<div class="achip" id="from-ol" onclick="setFrom(\'ol\')" style="font-size:11px">💙 '+olAddr+'</div>';
   qs('#ov-compose').classList.add('open');
 }
 
 function setFrom(f){
   C.selFrom=f;
-  const gm=qs('#from-gmail'), zg=qs('#from-ziggo');
-  if(f==='gmail'){gm.className='achip on1';zg.className='achip';}
-  else{gm.className='achip';zg.className='achip on2';}
+  const gm=qs('#from-gmail'), zg=qs('#from-ziggo'), ol=qs('#from-ol');
+  if(gm)gm.className='achip'+(f==='gmail'?' on1':'');
+  if(zg)zg.className='achip'+(f==='ziggo'?' on2':'');
+  if(ol)ol.className='achip'+(f==='ol'?' onol':'');
 }
 function closeCompose(){qs('#ov-compose').classList.remove('open');}
 async function genAI(){
@@ -1075,22 +1020,17 @@ function insAI(){if(!aiTxt)return;qs('#c-body').value=aiTxt;toast('Tekst ingevoe
 async function sendEmail(){
   const to=qs('#c-to').value.trim(), sub=qs('#c-sub').value.trim(), body=qs('#c-body').value.trim();
   if(!to){toast('Vul een ontvanger in');return;} if(!sub){toast('Vul een onderwerp in');return;} if(!body){toast('Schrijf een bericht');return;}
-  const tok=e.src==='ol'?C.oltok:C.g1tok; if(!tok){toast('Account niet verbonden');return;}
-  const fromAddr=C.selFrom==='ziggo'?(C.ziggoEmail||'rhjborghouts@ziggo.nl'):(C.g1email||'');
+  const tok=C.g1tok; if(!tok){toast('Account niet verbonden');return;}
+  const fromAddr=C.selFrom==='ziggo'?(C.ziggoEmail||'rhjborghouts@ziggo.nl'):C.selFrom==='ol'?(C.outlookEmail||'r.borghouts@outlook.com'):(C.g1email||'');
   const btn=qs('#snd-btn'); btn.textContent='Versturen...'; btn.disabled=true;
   try{
-    if(C.selAcc==='ol'){
-      const r=await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({message:{subject:sub,body:{contentType:'Text',content:body},toRecipients:[{emailAddress:{address:to}}]}})});
-      if(!r.ok)throw new Error('Outlook verzenden mislukt ('+r.status+')');
-      toast('Verstuurd via Outlook 💙');closeCompose();return;
-    }
     const hdrs=['To: '+to,'Subject: =?UTF-8?B?'+btoa(unescape(encodeURIComponent(sub)))+'?=','Content-Type: text/plain; charset=UTF-8'];
     if(fromAddr) hdrs.push('From: '+fromAddr);
     const raw=[...hdrs,'',body].join('\r\n');
     const enc=btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{method:'POST',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({raw:enc})});
     if(!r.ok)throw new Error('Verzenden mislukt ('+r.status+')');
-    toast('Verstuurd via '+(C.selFrom==='ziggo'?'Ziggo 🟢':'Gmail 📧')); closeCompose();
+    toast('Verstuurd via '+(C.selFrom==='ziggo'?'Ziggo 🟢':C.selFrom==='ol'?'Outlook 💙':'Gmail 📧')); closeCompose();
   }catch(e){toast('Fout: '+e.message);}
   finally{btn.textContent='Versturen ↗';btn.disabled=false;}
 }
@@ -1149,10 +1089,11 @@ function saveKeys(){
   const g=qs('#s-gid').value.trim();
   const m=qs('#s-mid')?qs('#s-mid').value.trim():'';
   const z=qs('#s-ziggo')?qs('#s-ziggo').value.trim():'';
+  const ol=qs('#s-ol')?qs('#s-ol').value.trim():'';
   if(a)C.ant=a;
   if(g)C.gid=g;
-  if(m)C.mid=m;
   if(z)C.ziggoEmail=z;
+  if(ol)C.outlookEmail=ol;
   saveC();
   updateUI();
   toast('✓ Opgeslagen!');
