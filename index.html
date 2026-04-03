@@ -277,7 +277,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <input type="text" class="sinp" id="s-gid" placeholder="Google Client ID">
         <input type="text" class="sinp" id="s-mid" placeholder="Microsoft Client ID (Outlook)">
         <input type="email" class="sinp" id="s-ziggo" placeholder="Ziggo e-mailadres (rhjborghouts@ziggo.nl)">
-        <button class="bp" style="margin-top:10px" onclick="saveKeys()" ontouchend="saveKeys();event.preventDefault()">Opslaan</button>
+        <button class="bp" style="margin-top:10px" ontouchend="event.preventDefault();saveKeys()" onclick="saveKeys()">Opslaan</button>
       </div>
       <div class="sset">
         <div class="sttl">Scriptable Widget</div>
@@ -589,7 +589,7 @@ function updateUI(){
 // FETCH EMAILS
 // ══════════════════════════════════
 async function fetchEmails(){
-  if(!C.g1tok&&!C.g2tok){
+  if(!C.g1tok&&!C.oltok){
     qs('#inbox-body').innerHTML='<div class="empty"><div class="eico">📭</div><div class="et">Geen accounts verbonden</div><div class="es">Ga naar Instellingen</div></div>';
     return;
   }
@@ -1144,7 +1144,19 @@ function selTok(){
   const ta=document.getElementById('tok-area');
   if(ta){ta.focus();ta.select();}
 }
-function saveKeys(){const a=qs('#s-ant').value.trim(),g=qs('#s-gid').value.trim(),m=qs('#s-mid')&&qs('#s-mid').value.trim(),z=qs('#s-ziggo')&&qs('#s-ziggo').value.trim();if(a)C.ant=a;if(g)C.gid=g;if(m)C.mid=m;if(z)C.ziggoEmail=z;saveC();toast('Opgeslagen ✓');}
+function saveKeys(){
+  const a=qs('#s-ant').value.trim();
+  const g=qs('#s-gid').value.trim();
+  const m=qs('#s-mid')?qs('#s-mid').value.trim():'';
+  const z=qs('#s-ziggo')?qs('#s-ziggo').value.trim():'';
+  if(a)C.ant=a;
+  if(g)C.gid=g;
+  if(m)C.mid=m;
+  if(z)C.ziggoEmail=z;
+  saveC();
+  updateUI();
+  toast('✓ Opgeslagen!');
+}
 function clearCache(){if(!confirm('E-maildata wissen?'))return;inbox=[];spam=[];localStorage.removeItem('mr_sp');renderInbox();renderSpam();badges();toast('Cache gewist');}
 
 // ══════════════════════════════════
