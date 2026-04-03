@@ -244,9 +244,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <div class="tab active" id="tab-inbox">
 
       <div class="ifbar">
-        <div class="ifbtn on" id="if-all" onclick="setFilter('all')">Alles</div>
-        <div class="ifbtn" id="if-gmail" onclick="setFilter('gmail')">📧 Gmail</div>
+        <div class="ifbtn on" id="if-all" onclick="setFilter('all')">📧 Gmail</div>
         <div class="ifbtn" id="if-ziggo" onclick="setFilter('ziggo')">🟢 Ziggo</div>
+        <div class="ifbtn" id="if-ol" onclick="setFilter('ol')">💙 Outlook</div>
       </div>
       <div id="inbox-body"></div>
     </div>
@@ -406,7 +406,15 @@ let selMode=false, selected=new Set(), inboxFilter='all', pendingN=null;
 // INIT
 // ══════════════════════════════════
 function init(){
-  if(location.search.includes('reset')){localStorage.clear();history.replaceState(null,'',location.pathname);location.reload();return;}
+  if(location.search.includes('reset')){
+    // Bewaar instellingen, wis alleen e-mail cache
+    const saved=localStorage.getItem('mr_c');
+    localStorage.clear();
+    if(saved)localStorage.setItem('mr_c',saved);
+    history.replaceState(null,'',location.pathname);
+    location.reload();
+    return;
+  }
   const h = location.hash;
   if(h.includes('access_token=')){
     const p=new URLSearchParams(h.slice(1));
@@ -755,10 +763,11 @@ function setFilter(f){
 function renderInbox(){
   let i=inbox.filter(e=>!e.spam);
   if(inboxFilter==='ziggo') i=i.filter(e=>isZ(e));
-  if(inboxFilter==='gmail') i=i.filter(e=>!isZ(e));
+  if(inboxFilter==='all') i=i.filter(e=>e.src!=='ol'&&!isZ(e));
+  if(inboxFilter==='ol') i=i.filter(e=>e.src==='ol');
   const wrap=selMode?'<div class="selmode">':'';
   const wend=selMode?'</div>':'';
-  const ico=inboxFilter==='ziggo'?'🟢':inboxFilter==='gmail'?'📧':'📭';
+  const ico=inboxFilter==='ziggo'?'🟢':inboxFilter==='ol'?'💙':'📧';
   qs('#inbox-body').innerHTML=i.length?(wrap+makeCards(i)+wend):'<div class="empty"><div class="eico">'+ico+'</div><div class="et">Geen e-mails</div></div>';
 }
 function renderSpam(){qs('#spam-body').innerHTML=spam.length?makeCards(spam):'<div class="empty"><div class="eico">🛡️</div><div class="et">Geen spam</div></div>';}
