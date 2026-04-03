@@ -277,7 +277,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <input type="text" class="sinp" id="s-gid" placeholder="Google Client ID">
         <input type="text" class="sinp" id="s-mid" placeholder="Microsoft Client ID (Outlook)">
         <input type="email" class="sinp" id="s-ziggo" placeholder="Ziggo e-mailadres (rhjborghouts@ziggo.nl)">
-        <button class="bp" style="margin-top:10px" onclick="saveKeys()">Opslaan</button>
+        <button class="bp" style="margin-top:10px" onclick="saveKeys()" ontouchend="saveKeys();event.preventDefault()">Opslaan</button>
       </div>
       <div class="sset">
         <div class="sttl">Scriptable Widget</div>
@@ -389,7 +389,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 // ══════════════════════════════════
 const REDIR = location.origin + location.pathname;
 const GSCOPE = 'https://mail.google.com/';
-const MS_SCOPE = 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send offline_access';
+const MS_SCOPE = 'https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read offline_access';
 const DFOLDERS = [
   {id:'werk',   name:'Werk',          emoji:'💼', color:'#4da6ff'},
   {id:'belang', name:'Belangrijk',    emoji:'⭐', color:'#eab308'},
@@ -532,9 +532,16 @@ function doLogin(){
 function closeAuth(){qs('#ov-auth').classList.remove('open');pendingN=null;}
 
 function connectOL(){
-  if(!C.mid){toast('Voer eerst een Microsoft Client ID in');goTab('settings');return;}
-  const hp='&prompt=select_account';
-  location.href='https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id='+encodeURIComponent(C.mid)+'&redirect_uri='+encodeURIComponent(REDIR)+'&response_type=token&scope='+encodeURIComponent(MS_SCOPE)+'&state=ol'+hp;
+  if(!C.mid){toast('Voer eerst een Microsoft Client ID in en sla op');goTab('settings');return;}
+  const hint=C.olemail?'&login_hint='+encodeURIComponent(C.olemail):'&prompt=select_account';
+  const url='https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
+    +'?client_id='+encodeURIComponent(C.mid)
+    +'&redirect_uri='+encodeURIComponent(REDIR)
+    +'&response_type=token'
+    +'&scope='+encodeURIComponent(MS_SCOPE)
+    +'&state=ol'
+    +hint;
+  location.href=url;
 }
 function disconnectOL(){
   if(!confirm('Outlook loskoppelen?'))return;
