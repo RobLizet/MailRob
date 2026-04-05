@@ -7,6 +7,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MailRob">
+<meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="theme-color" content="#080c12"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
+  <link rel="apple-touch-icon" href="icon-512.png"/>
 <link rel="apple-touch-icon" id="pwa-icon">
 <link id="manifest-link">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1119,6 +1125,12 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 function qs(s){return document.querySelector(s);}
 let tt;
 function toast(msg){const t=qs('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800);}
+  // Service Worker (Android PWA installatie)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
 
 init();
 </script>
