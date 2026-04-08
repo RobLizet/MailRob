@@ -24,7 +24,7 @@
   --teal:#1a7a42;--tdim:rgba(26,122,66,.12);--text:#0a2818;--sub:#1e5c3a;
   --danger:#cc2200;--warn:#b85c00;--g1:#c0392b;--g2:#1a7a42;--ziggo:#0a6630;--ol:#0078D4;
   --r:12px;--nh:64px;--hh:54px;
-  --st:env(safe-area-inset-top,44px);--sb:env(safe-area-inset-bottom,20px)
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;overflow:hidden}
 
@@ -38,6 +38,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .fi{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;margin-bottom:8px;-webkit-text-fill-color:var(--text);caret-color:var(--text)}
 .fi:last-child{margin-bottom:0}.fi:focus{border-color:var(--teal)}.fi::placeholder{color:var(--sub)}
 .fi:-webkit-autofill,.fi:-webkit-autofill:focus{-webkit-box-shadow:0 0 0 1000px var(--s3) inset!important;-webkit-text-fill-color:var(--text)!important;border-color:var(--teal)!important}
+.fi:autofill{background:var(--s3)!important;color:var(--text)!important;border-color:var(--teal)!important}
 .bp{background:var(--teal);color:#ffffff;border:none;border-radius:8px;padding:13px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;width:100%;max-width:440px}
 .bp:active{opacity:.8}
 .sn{font-size:11px;color:var(--sub);text-align:center;max-width:380px;line-height:1.6;margin-top:6px}
@@ -162,6 +163,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .ci{width:100%;background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;-webkit-text-fill-color:var(--text);caret-color:var(--teal)}
 .ci:focus{border-color:var(--teal)}.ci::placeholder{color:var(--sub)}
 .ci:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px var(--s1) inset!important;-webkit-text-fill-color:var(--text)!important}
+.ci:autofill{background:var(--s1)!important;color:var(--text)!important}
 .acc-row{display:flex;gap:8px}
 .achip{flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);cursor:pointer;text-align:center;font-size:12px;font-weight:500;color:var(--sub)}
 .achip.on1{border-color:var(--g1);background:rgba(234,67,53,.1);color:var(--g1)}
@@ -273,6 +275,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       <div class="sset">
         <div class="sttl">API Sleutels bijwerken</div>
         <input type="password" class="sinp" id="s-ant" placeholder="Anthropic API Key">
+        <input type="email" class="sinp" id="s-mid" placeholder="Gmail adres (zweetzakken@gmail.com)">
         <input type="text" class="sinp" id="s-gid" placeholder="Google Client ID">
         <input type="email" class="sinp" id="s-ziggo" placeholder="Ziggo e-mailadres (rhjborghouts@ziggo.nl)">
         <input type="email" class="sinp" id="s-ol" placeholder="Outlook e-mailadres (r.borghouts@outlook.com)">
@@ -388,6 +391,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 // ══════════════════════════════════
 const REDIR = location.origin + location.pathname;
 const GSCOPE = 'https://mail.google.com/';
+const DEFAULT_GID = '375463794423-en8arree30vmuloo9k13cr6uir0ra0he.apps.googleusercontent.com';
 const DFOLDERS = [
   {id:'werk',   name:'Werk',          emoji:'💼', color:'#4da6ff'},
   {id:'belang', name:'Belangrijk',    emoji:'⭐', color:'#eab308'},
@@ -396,7 +400,7 @@ const DFOLDERS = [
   {id:'archief',name:'Archief',       emoji:'📁', color:'#6a80a0'},
 ];
 
-let C = {ant:'',gid:'',g1tok:null,g1email:'',g1exp:0,ziggoEmail:'rhjborghouts@ziggo.nl',outlookEmail:'r.borghouts@outlook.com',spamFilter:true,aiEnabled:true,selAcc:null,selFrom:null};
+let C = {ant:'',gid:DEFAULT_GID,g1tok:null,g1email:'',g1exp:0,ziggoEmail:'rhjborghouts@ziggo.nl',outlookEmail:'r.borghouts@outlook.com',spamFilter:true,aiEnabled:true,selAcc:null,selFrom:null};
 let inbox=[], spam=[], sent=[], trash=[], fEmails={}, folders=[], cur=null, aiTxt='', curFV=null;
 let selMode=false, selected=new Set(), inboxFilter='all', pendingN=null;
 
@@ -424,6 +428,7 @@ function init(){
     saveC(); history.replaceState(null,'',location.pathname);
   }
   try{const s=localStorage.getItem('mr_c');if(s)Object.assign(C,JSON.parse(s));}catch(e){}
+  if(!C.gid) C.gid = DEFAULT_GID;
   try{const s=localStorage.getItem('mr_sp');if(s)spam=JSON.parse(s);}catch(e){}
   try{const s=localStorage.getItem('mr_fd');if(s)folders=JSON.parse(s);}catch(e){folders=[...DFOLDERS];}
   try{const s=localStorage.getItem('mr_fe');if(s)fEmails=JSON.parse(s);}catch(e){}
@@ -503,7 +508,7 @@ function hardReset(){if(!confirm('Alles wissen?'))return;localStorage.clear();lo
 function saveC(){localStorage.setItem('mr_c',JSON.stringify(C));}
 function saveF(){localStorage.setItem('mr_fd',JSON.stringify(folders));localStorage.setItem('mr_fe',JSON.stringify(fEmails));}
 function prefSet(){
-  if(C.ant)qs('#s-ant').value=C.ant; if(C.gid)qs('#s-gid').value=C.gid;
+  if(C.ant)qs('#s-ant').value=C.ant; if(C.gid)qs('#s-gid').value=C.gid; if(C.g1email&&qs('#s-mid'))qs('#s-mid').value=C.g1email;
   if(C.ziggoEmail&&qs('#s-ziggo'))qs('#s-ziggo').value=C.ziggoEmail;
   if(C.outlookEmail&&qs('#s-ol'))qs('#s-ol').value=C.outlookEmail;
   qs('#tog-spam').className='tog'+(C.spamFilter?' on':'');
@@ -1098,6 +1103,7 @@ function saveKeys(){
   const ol=qs('#s-ol')?qs('#s-ol').value.trim():'';
   if(a)C.ant=a;
   if(g)C.gid=g;
+  if(m){C.g1email=m;}
   if(z)C.ziggoEmail=z;
   if(ol)C.outlookEmail=ol;
   saveC();
