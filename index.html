@@ -279,18 +279,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <div class="sttl">🔔 Push Meldingen</div>
         <div class="srow">
           <div><div class="slb">Meldingen nieuwe e-mail</div><div class="ssub" id="push-status">Niet ingeschakeld</div></div>
-          <button class="bcn" id="push-btn" style="background:var(--teal);color:#fff" onclick="togglePush()">Inschakelen</button>
+          <button class="bcn" id="push-btn" style="background:var(--teal);color:#fff" ontouchend="event.preventDefault();togglePush()" onclick="togglePush()">Inschakelen</button>
         </div>
-        <input type="text" class="sinp" id="s-vapid" placeholder="VAPID Web Push sleutel (Firebase → Cloud Messaging)">
-        <input type="text" class="sinp" id="s-fcm-cfg" placeholder='Firebase config JSON ({"apiKey":"...","projectId":"...",...})'>
-        <button class="bp" style="margin-top:10px;background:var(--s2);color:var(--teal);border:1px solid var(--teal)" ontouchend="event.preventDefault();saveFCM()" onclick="saveFCM()">Opslaan &amp; activeren</button>
-        <p style="font-size:11px;color:var(--sub);margin-top:10px;line-height:1.8">
-          <b>Hoe instellen:</b><br>
-          1. Ga naar <a href="https://console.firebase.google.com" target="_blank" style="color:var(--teal)">console.firebase.google.com</a> → nieuw project<br>
-          2. Project → Instellingen ⚙️ → Cloud Messaging → Web Push-certificaten → Sleutelpaar genereren → kopieer sleutel<br>
-          3. Zelfde pagina → Jouw apps → Web → Config kopiëren → plak als JSON hierboven<br>
-          4. Tik "Opslaan &amp; activeren" → geef toestemming
-        </p>
+        <p style="font-size:12px;color:var(--sub);margin-top:8px;line-height:1.6">Firebase is al geconfigureerd. Tik op <b>Inschakelen</b> en geef toestemming voor meldingen.</p>
       </div>
       <div class="sset">
         <div class="sttl">API Sleutels bijwerken</div>
@@ -1147,19 +1138,22 @@ function clearCache(){if(!confirm('E-maildata wissen?'))return;inbox=[];spam=[];
 let fcmMessaging = null;
 
 function saveFCM(){
+  // Lees velden — als leeg, gebruik bestaande C waarden (defaults)
   const v = (qs('#s-vapid')||{}).value||'';
   const cfgRaw = (qs('#s-fcm-cfg')||{}).value||'';
-  if(v) C.fcmVapid = v.trim();
-  if(cfgRaw){
+  if(v.trim()) C.fcmVapid = v.trim();
+  if(cfgRaw.trim()){
     try{
       const parsed = JSON.parse(cfgRaw.trim());
       C.fcmCfg = JSON.stringify(parsed);
-    }catch(e){ toast('❌ Firebase JSON is ongeldig — controleer de opmaak'); return; }
+    }catch(e){
+      // Misschien al een JSON string — gewoon opslaan als het er geldig uitziet
+      if(cfgRaw.includes('apiKey')) C.fcmCfg = cfgRaw.trim();
+      else { toast('❌ Firebase JSON ongeldig'); return; }
+    }
   }
   saveC();
-  toast('Firebase instellingen opgeslagen ✓');
-  // Auto-init als beide aanwezig
-  if(C.fcmVapid && C.fcmCfg) initFCM().then(()=>{ if(C.pushEnabled) enablePush(); });
+  toast('Opgeslagen ✓ — tik nu op Inschakelen');
 }
 
 async function initFCM(){
@@ -1167,6 +1161,7 @@ async function initFCM(){
   try{
     let cfg;
     try{ cfg = JSON.parse(C.fcmCfg); }catch(e){ return false; }
+    if(typeof firebase === 'undefined'){ toast('❌ Firebase SDK niet geladen — controleer internetverbinding'); return false; }
     if(!firebase.apps.length) firebase.initializeApp(cfg);
     fcmMessaging = firebase.messaging();
     return true;
@@ -1174,25 +1169,31 @@ async function initFCM(){
 }
 
 async function enablePush(){
-  if(!C.fcmVapid || !C.fcmCfg){ toast('Sla eerst Firebase instellingen op'); return; }
-  if(!fcmMessaging){ const ok = await initFCM(); if(!ok){ toast('❌ Firebase kon niet starten — check de config JSON'); return; } }
+  // Zorg dat C altijd de defaults heeft als velden leeg zijn
+  if(!C.fcmVapid) C.fcmVapid = DEFAULT_FCM_VAPID;
+  if(!C.fcmCfg)   C.fcmCfg   = DEFAULT_FCM_CFG;
+  saveC();
+
+  if(!fcmMessaging){
+    const ok = await initFCM();
+    if(!ok){ toast('❌ Firebase start mislukt — zie console'); return; }
+  }
   try{
     const perm = await Notification.requestPermission();
-    if(perm !== 'granted'){ toast('❌ Toestemming geweigerd — sta meldingen toe in browserinstellingen'); return; }
+    if(perm !== 'granted'){ toast('❌ Toestemming geweigerd — sta meldingen toe'); return; }
     const token = await fcmMessaging.getToken({ vapidKey: C.fcmVapid });
     if(token){
       C.pushToken = token; C.pushEnabled = true; saveC();
       updatePushUI();
       toast('🔔 Meldingen ingeschakeld ✓');
-      console.log('FCM token:', token); // Gebruik dit token in je backend/Cloudflare Worker
+    } else {
+      toast('⚠️ Geen token — controleer Firebase project instellingen');
     }
-  }catch(e){ toast('❌ Fout bij inschakelen: '+e.message); }
+  }catch(e){ toast('❌ '+e.message); console.error(e); }
 }
 
 async function disablePush(){
-  try{
-    if(fcmMessaging) await fcmMessaging.deleteToken();
-  }catch(e){}
+  try{ if(fcmMessaging) await fcmMessaging.deleteToken(); }catch(e){}
   C.pushEnabled = false; C.pushToken = ''; saveC();
   updatePushUI(); toast('Meldingen uitgeschakeld');
 }
