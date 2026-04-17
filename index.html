@@ -17,9 +17,7 @@
 <link id="manifest-link">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -1133,68 +1131,77 @@ function saveKeys(){
 function clearCache(){if(!confirm('E-maildata wissen?'))return;inbox=[];spam=[];localStorage.removeItem('mr_sp');renderInbox();renderSpam();badges();toast('Cache gewist');}
 
 // ══════════════════════════════════
-// PUSH MELDINGEN (FCM)
+// PUSH MELDINGEN (Web Notifications)
 // ══════════════════════════════════
-let fcmMessaging = null;
 
 function saveFCM(){
-  // Lees velden — als leeg, gebruik bestaande C waarden (defaults)
-  const v = (qs('#s-vapid')||{}).value||'';
-  const cfgRaw = (qs('#s-fcm-cfg')||{}).value||'';
-  if(v.trim()) C.fcmVapid = v.trim();
-  if(cfgRaw.trim()){
-    try{
-      const parsed = JSON.parse(cfgRaw.trim());
-      C.fcmCfg = JSON.stringify(parsed);
-    }catch(e){
-      // Misschien al een JSON string — gewoon opslaan als het er geldig uitziet
-      if(cfgRaw.includes('apiKey')) C.fcmCfg = cfgRaw.trim();
-      else { toast('❌ Firebase JSON ongeldig'); return; }
-    }
-  }
-  saveC();
-  toast('Opgeslagen ✓ — tik nu op Inschakelen');
+  toast('Firebase is al geconfigureerd ✓');
 }
 
-async function initFCM(){
-  if(!C.fcmCfg || !C.fcmVapid) return false;
-  try{
-    let cfg;
-    try{ cfg = JSON.parse(C.fcmCfg); }catch(e){ return false; }
-    if(typeof firebase === 'undefined'){ toast('❌ Firebase SDK niet geladen — controleer internetverbinding'); return false; }
-    if(!firebase.apps.length) firebase.initializeApp(cfg);
-    fcmMessaging = firebase.messaging();
-    return true;
-  }catch(e){ console.error('FCM init fout:',e); return false; }
+async function initPushPermission(){
+  if(!('Notification' in window)){ toast('❌ Meldingen worden niet ondersteund door deze browser'); return false; }
+  if(Notification.permission === 'granted') return true;
+  if(Notification.permission === 'denied'){ toast('❌ Meldingen geblokkeerd — sta toe via browserinstellingen'); return false; }
+  const perm = await Notification.requestPermission();
+  return perm === 'granted';
 }
 
 async function enablePush(){
-  // Zorg dat C altijd de defaults heeft als velden leeg zijn
+  toast('⏳ Firebase starten...');
+
+  // Zorg dat defaults geladen zijn
   if(!C.fcmVapid) C.fcmVapid = DEFAULT_FCM_VAPID;
   if(!C.fcmCfg)   C.fcmCfg   = DEFAULT_FCM_CFG;
-  saveC();
 
+  // Init Firebase als nog niet gedaan
   if(!fcmMessaging){
-    const ok = await initFCM();
-    if(!ok){ toast('❌ Firebase start mislukt — zie console'); return; }
+    try{
+      let cfg;
+      try{ cfg = JSON.parse(C.fcmCfg); }catch(e){ toast('❌ Firebase config ongeldig'); return; }
+      if(typeof firebase === 'undefined'){ toast('❌ Firebase SDK niet geladen'); return; }
+      if(!firebase.apps.length) firebase.initializeApp(cfg);
+      fcmMessaging = firebase.messaging();
+    }catch(e){ toast('❌ Firebase fout: '+e.message); console.error(e); return; }
   }
+
+  // Vraag toestemming
+  toast('⏳ Toestemming vragen...');
+  const ok = await initPushPermission();
+  if(!ok) return;
+
+  // Haal FCM token op
   try{
-    const perm = await Notification.requestPermission();
-    if(perm !== 'granted'){ toast('❌ Toestemming geweigerd — sta meldingen toe'); return; }
     const token = await fcmMessaging.getToken({ vapidKey: C.fcmVapid });
-    if(token){
-      C.pushToken = token; C.pushEnabled = true; saveC();
-      updatePushUI();
-      toast('🔔 Meldingen ingeschakeld ✓');
-    } else {
-      toast('⚠️ Geen token — controleer Firebase project instellingen');
-    }
+    if(!token){ toast('⚠️ Geen token — probeer opnieuw'); return; }
+
+    // Sla token op in Firebase DB zodat de Cloudflare Worker hem kan gebruiken
+    await saveFCMTokenToDB(token);
+
+    C.pushToken = token; C.pushEnabled = true; saveC();
+    updatePushUI();
+    toast('🔔 Meldingen ingeschakeld ✓');
+    // Test melding
+    setTimeout(()=>{
+      new Notification('MailRob 🔔', { body: 'Meldingen werken! Je krijgt bericht bij nieuwe e-mail.', icon: './icon-192.png' });
+    }, 600);
   }catch(e){ toast('❌ '+e.message); console.error(e); }
 }
 
+async function saveFCMTokenToDB(token){
+  // Sla FCM token op in Firebase Realtime Database (voor Cloudflare Worker)
+  try{
+    const dbUrl = 'https://siebes-wereld-default-rtdb.europe-west1.firebasedatabase.app/mailrob/fcm_token.json';
+    await fetch(dbUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(token)
+    });
+    console.log('FCM token opgeslagen in DB');
+  }catch(e){ console.warn('Token opslaan in DB mislukt:', e.message); }
+}
+
 async function disablePush(){
-  try{ if(fcmMessaging) await fcmMessaging.deleteToken(); }catch(e){}
-  C.pushEnabled = false; C.pushToken = ''; saveC();
+  C.pushEnabled = false; saveC();
   updatePushUI(); toast('Meldingen uitgeschakeld');
 }
 
@@ -1207,35 +1214,46 @@ function updatePushUI(){
   const btn = qs('#push-btn');
   const status = qs('#push-status');
   if(!btn || !status) return;
-  if(C.pushEnabled){
+  const supported = 'Notification' in window;
+  if(!supported){
+    status.textContent = '❌ Niet ondersteund door browser';
+    btn.style.display = 'none';
+    return;
+  }
+  if(C.pushEnabled && Notification.permission === 'granted'){
     status.textContent = '✅ Ingeschakeld';
     status.style.color = 'var(--teal)';
     btn.textContent = 'Uitschakelen';
     btn.style.background = 'var(--danger)';
   } else {
+    if(Notification.permission === 'denied'){
+      status.textContent = '❌ Geblokkeerd in browserinstellingen';
+      status.style.color = 'var(--danger)';
+      btn.textContent = 'Hoe toestaan?';
+      btn.style.background = 'var(--warn)';
+      btn.onclick = ()=>toast('Ga naar browserinstellingen → Meldingen → siebes-wereld.web.app → Toestaan');
+      return;
+    }
     status.textContent = 'Niet ingeschakeld';
     status.style.color = '';
     btn.textContent = 'Inschakelen';
     btn.style.background = 'var(--teal)';
+    btn.onclick = togglePush;
   }
-  // Pre-fill saved values
-  if(C.fcmVapid && qs('#s-vapid')) qs('#s-vapid').value = C.fcmVapid;
-  if(C.fcmCfg && qs('#s-fcm-cfg')) qs('#s-fcm-cfg').value = C.fcmCfg;
 }
 
-// Meldingen tonen voor nieuwe e-mails (foreground)
+// Meldingen tonen voor nieuwe e-mails
 function notifyNewEmails(newMails){
-  if(!C.pushEnabled || !fcmMessaging) return;
+  if(!C.pushEnabled) return;
   if(!newMails || !newMails.length) return;
-  newMails.forEach(e=>{
-    if(Notification.permission==='granted'){
-      new Notification('📧 Nieuwe e-mail van '+e.from, {
-        body: e.sub,
-        icon: './icon-192.png',
-        tag: 'mailrob-'+e.id
-      });
-    }
-  });
+  if(Notification.permission !== 'granted') return;
+  // Groepeer meerdere mails in 1 melding
+  if(newMails.length === 1){
+    const e = newMails[0];
+    new Notification('📧 '+e.from, { body: e.sub, icon: './icon-192.png', tag: 'mailrob-new' });
+  } else {
+    new Notification('📧 '+newMails.length+' nieuwe e-mails', { body: newMails.map(e=>e.from).join(', '), icon: './icon-192.png', tag: 'mailrob-new' });
+  }
 }
 
 // ══════════════════════════════════
