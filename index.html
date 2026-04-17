@@ -17,6 +17,9 @@
 <link id="manifest-link">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -273,6 +276,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <div class="srow"><div class="slb">✨ AI Schrijfhulp</div><div class="tog on" id="tog-ai" onclick="toggleP('aiEnabled','tog-ai')"></div></div>
       </div>
       <div class="sset">
+        <div class="sttl">🔔 Push Meldingen</div>
+        <div class="srow">
+          <div><div class="slb">Meldingen nieuwe e-mail</div><div class="ssub" id="push-status">Niet ingeschakeld</div></div>
+          <button class="bcn" id="push-btn" style="background:var(--teal);color:#fff" onclick="togglePush()">Inschakelen</button>
+        </div>
+        <input type="text" class="sinp" id="s-vapid" placeholder="VAPID Web Push sleutel (Firebase → Cloud Messaging)">
+        <input type="text" class="sinp" id="s-fcm-cfg" placeholder='Firebase config JSON ({"apiKey":"...","projectId":"...",...})'>
+        <button class="bp" style="margin-top:10px;background:var(--s2);color:var(--teal);border:1px solid var(--teal)" ontouchend="event.preventDefault();saveFCM()" onclick="saveFCM()">Opslaan &amp; activeren</button>
+        <p style="font-size:11px;color:var(--sub);margin-top:10px;line-height:1.8">
+          <b>Hoe instellen:</b><br>
+          1. Ga naar <a href="https://console.firebase.google.com" target="_blank" style="color:var(--teal)">console.firebase.google.com</a> → nieuw project<br>
+          2. Project → Instellingen ⚙️ → Cloud Messaging → Web Push-certificaten → Sleutelpaar genereren → kopieer sleutel<br>
+          3. Zelfde pagina → Jouw apps → Web → Config kopiëren → plak als JSON hierboven<br>
+          4. Tik "Opslaan &amp; activeren" → geef toestemming
+        </p>
+      </div>
+      <div class="sset">
         <div class="sttl">API Sleutels bijwerken</div>
         <input type="password" class="sinp" id="s-ant" placeholder="Anthropic API Key">
         <input type="email" class="sinp" id="s-mid" placeholder="Gmail adres (zweetzakken@gmail.com)">
@@ -400,7 +420,9 @@ const DFOLDERS = [
   {id:'archief',name:'Archief',       emoji:'📁', color:'#6a80a0'},
 ];
 
-let C = {ant:'',gid:DEFAULT_GID,g1tok:null,g1email:'',g1exp:0,ziggoEmail:'rhjborghouts@ziggo.nl',outlookEmail:'r.borghouts@outlook.com',spamFilter:true,aiEnabled:true,selAcc:null,selFrom:null};
+const DEFAULT_FCM_VAPID = 'BEtZX7FIeg8N3vnLSsCbrQN8Of2mJukKovMXzqqerfauRHjPQiau3B2i5f_rfoa2jf76i-RAhmPDQxUkxEu2ov8';
+const DEFAULT_FCM_CFG = JSON.stringify({apiKey:"AIzaSyD8koIpFHMeITRnOTiSunylLq7leNEGvlg",authDomain:"siebes-wereld.firebaseapp.com",databaseURL:"https://siebes-wereld-default-rtdb.europe-west1.firebasedatabase.app",projectId:"siebes-wereld",storageBucket:"siebes-wereld.firebasestorage.app",messagingSenderId:"958782311419",appId:"1:958782311419:web:40384afa7f31a344e4595e"});
+let C = {ant:'',gid:DEFAULT_GID,g1tok:null,g1email:'',g1exp:0,ziggoEmail:'rhjborghouts@ziggo.nl',outlookEmail:'r.borghouts@outlook.com',spamFilter:true,aiEnabled:true,selAcc:null,selFrom:null,fcmVapid:DEFAULT_FCM_VAPID,fcmCfg:DEFAULT_FCM_CFG,pushEnabled:false};
 let inbox=[], spam=[], sent=[], trash=[], fEmails={}, folders=[], cur=null, aiTxt='', curFV=null;
 let selMode=false, selected=new Set(), inboxFilter='all', pendingN=null;
 
@@ -436,7 +458,11 @@ function init(){
   checkExp(); initPWA();
   if(!C.ant&&!C.gid){qs('#setup').style.display='flex';}
   else{startApp();}
+  // FCM init als config aanwezig
+  if(C.fcmCfg && C.fcmVapid) initFCM();
   setInterval(checkExp, 60000);
+  // Auto-refresh elke 3 minuten voor push meldingen
+  setInterval(()=>{ if(C.g1tok && C.pushEnabled) fetchEmails(); }, 3*60*1000);
   // Email tap — use touchend for iOS PWA reliability
   let touchMoved=false;
   document.addEventListener('touchstart',function(e){touchMoved=false;},true);
@@ -513,6 +539,7 @@ function prefSet(){
   if(C.outlookEmail&&qs('#s-ol'))qs('#s-ol').value=C.outlookEmail;
   qs('#tog-spam').className='tog'+(C.spamFilter?' on':'');
   qs('#tog-ai').className='tog'+(C.aiEnabled?' on':'');
+  updatePushUI();
 }
 
 // ══════════════════════════════════
@@ -574,9 +601,11 @@ async function fetchEmails(){
   const results=await Promise.allSettled(jobs);
   const fresh=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
   const ids=new Set(inbox.map(e=>e.id));
-  fresh.forEach(e=>{if(!ids.has(e.id))inbox.push(e);});
+  const brandNew=[];
+  fresh.forEach(e=>{if(!ids.has(e.id)){inbox.push(e);if(e.unread)brandNew.push(e);}});
   inbox.sort((a,b)=>b.date-a.date);
   renderInbox(); badges(); renderFolders();
+  if(brandNew.length) notifyNewEmails(brandNew);
   if(C.spamFilter&&fresh.length>0) doSpam(fresh);
 }
 
@@ -1111,6 +1140,102 @@ function saveKeys(){
   toast('✓ Opgeslagen!');
 }
 function clearCache(){if(!confirm('E-maildata wissen?'))return;inbox=[];spam=[];localStorage.removeItem('mr_sp');renderInbox();renderSpam();badges();toast('Cache gewist');}
+
+// ══════════════════════════════════
+// PUSH MELDINGEN (FCM)
+// ══════════════════════════════════
+let fcmMessaging = null;
+
+function saveFCM(){
+  const v = (qs('#s-vapid')||{}).value||'';
+  const cfgRaw = (qs('#s-fcm-cfg')||{}).value||'';
+  if(v) C.fcmVapid = v.trim();
+  if(cfgRaw){
+    try{
+      const parsed = JSON.parse(cfgRaw.trim());
+      C.fcmCfg = JSON.stringify(parsed);
+    }catch(e){ toast('❌ Firebase JSON is ongeldig — controleer de opmaak'); return; }
+  }
+  saveC();
+  toast('Firebase instellingen opgeslagen ✓');
+  // Auto-init als beide aanwezig
+  if(C.fcmVapid && C.fcmCfg) initFCM().then(()=>{ if(C.pushEnabled) enablePush(); });
+}
+
+async function initFCM(){
+  if(!C.fcmCfg || !C.fcmVapid) return false;
+  try{
+    let cfg;
+    try{ cfg = JSON.parse(C.fcmCfg); }catch(e){ return false; }
+    if(!firebase.apps.length) firebase.initializeApp(cfg);
+    fcmMessaging = firebase.messaging();
+    return true;
+  }catch(e){ console.error('FCM init fout:',e); return false; }
+}
+
+async function enablePush(){
+  if(!C.fcmVapid || !C.fcmCfg){ toast('Sla eerst Firebase instellingen op'); return; }
+  if(!fcmMessaging){ const ok = await initFCM(); if(!ok){ toast('❌ Firebase kon niet starten — check de config JSON'); return; } }
+  try{
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ toast('❌ Toestemming geweigerd — sta meldingen toe in browserinstellingen'); return; }
+    const token = await fcmMessaging.getToken({ vapidKey: C.fcmVapid });
+    if(token){
+      C.pushToken = token; C.pushEnabled = true; saveC();
+      updatePushUI();
+      toast('🔔 Meldingen ingeschakeld ✓');
+      console.log('FCM token:', token); // Gebruik dit token in je backend/Cloudflare Worker
+    }
+  }catch(e){ toast('❌ Fout bij inschakelen: '+e.message); }
+}
+
+async function disablePush(){
+  try{
+    if(fcmMessaging) await fcmMessaging.deleteToken();
+  }catch(e){}
+  C.pushEnabled = false; C.pushToken = ''; saveC();
+  updatePushUI(); toast('Meldingen uitgeschakeld');
+}
+
+async function togglePush(){
+  if(C.pushEnabled){ disablePush(); }
+  else { await enablePush(); }
+}
+
+function updatePushUI(){
+  const btn = qs('#push-btn');
+  const status = qs('#push-status');
+  if(!btn || !status) return;
+  if(C.pushEnabled){
+    status.textContent = '✅ Ingeschakeld';
+    status.style.color = 'var(--teal)';
+    btn.textContent = 'Uitschakelen';
+    btn.style.background = 'var(--danger)';
+  } else {
+    status.textContent = 'Niet ingeschakeld';
+    status.style.color = '';
+    btn.textContent = 'Inschakelen';
+    btn.style.background = 'var(--teal)';
+  }
+  // Pre-fill saved values
+  if(C.fcmVapid && qs('#s-vapid')) qs('#s-vapid').value = C.fcmVapid;
+  if(C.fcmCfg && qs('#s-fcm-cfg')) qs('#s-fcm-cfg').value = C.fcmCfg;
+}
+
+// Meldingen tonen voor nieuwe e-mails (foreground)
+function notifyNewEmails(newMails){
+  if(!C.pushEnabled || !fcmMessaging) return;
+  if(!newMails || !newMails.length) return;
+  newMails.forEach(e=>{
+    if(Notification.permission==='granted'){
+      new Notification('📧 Nieuwe e-mail van '+e.from, {
+        body: e.sub,
+        icon: './icon-192.png',
+        tag: 'mailrob-'+e.id
+      });
+    }
+  });
+}
 
 // ══════════════════════════════════
 // PWA
