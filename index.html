@@ -17,7 +17,9 @@
 <link id="manifest-link">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -225,7 +227,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <input type="text" class="fi" id="su-gid" placeholder="375463794423-en8arree30vmuloo9k13cr6uir0ra0he.apps.googleusercontent.com">
     <p style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5">Één Client ID voor beide Gmail accounts</p>
   </div>
-  <button class="bp" onclick="saveSetup()" ontouchend="saveSetup();event.preventDefault()">Opslaan &amp; Starten →</button>
+  <button class="bp" onclick="saveSetup()" ontouchend="event.preventDefault();event.stopPropagation();saveSetup()">Opslaan &amp; Starten →</button>
   <p class="sn">API keys worden lokaal opgeslagen op je iPhone.</p>
   <button onclick="hardReset()" style="margin-top:16px;background:none;border:none;color:var(--danger);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-decoration:underline;opacity:.7">Alles wissen en opnieuw beginnen</button>
 </div>
@@ -1092,29 +1094,22 @@ function goTab(t){
 }
 function toggleP(k,id){C[k]=!C[k];saveC();qs('#'+id).className='tog'+(C[k]?' on':'');}
 function copyToken(){
-  const tok = C.g1tok;
-  if(!tok){toast('Niet verbonden - log eerst in');return;}
-  // Toon token in groot tekstveld
+  const tok=C.g1tok;                      
+  if(!tok){toast('Niet verbonden — log eerst in');return;}
+  const email=C.g1email||'';
+  const txt='Keychain.set("mailrob_g1_token", "'+tok+'");\nKeychain.set("mailrob_g1_email", "'+email+'");';
+  // Show in modal so user can copy manually
   const modal=document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px';
-  modal.innerHTML='<div style="background:#c8eedd;border-radius:16px;padding:20px;width:100%;max-width:420px">'
-    +'<div style="font-size:15px;font-weight:800;color:#0a2818;margin-bottom:8px">Gmail Token (GMAIL_TOKEN)</div>'
-    +'<div style="font-size:12px;color:#1e5c3a;margin-bottom:10px">Houd de tekst ingedrukt -> Alles selecteren -> Kopieer</div>'
-    +'<div style="background:#0a2818;color:#2ffdb0;border-radius:8px;padding:12px;font-family:monospace;font-size:11px;word-break:break-all;user-select:all;-webkit-user-select:all" id="tok-display">'+tok+'</div>'
-    +'<button onclick="this.closest('div[style*=fixed]').remove()" style="margin-top:12px;width:100%;background:#1a7a42;color:#fff;border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:600;cursor:pointer">Sluiten</button>'
-    +'</div>';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML='<div style="background:#d8f5e8;border-radius:16px;padding:20px;width:100%;max-width:400px">'
+    +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:#0a2818;margin-bottom:8px">📋 Scriptable Token</div>'
+    +'<div style="font-size:12px;color:#1e5c3a;margin-bottom:12px">Kopieer de tekst hieronder en plak in een nieuw Scriptable script. Tik daarna op Run.</div>'
+    +'<textarea style="width:100%;height:100px;background:#0a2818;color:#2ffdb0;border:none;border-radius:8px;padding:10px;font-family:monospace;font-size:11px;resize:none" id="tok-area">'+txt+'</textarea>'
+    +'<div style="margin-top:12px;display:flex;gap:8px">'
+    +'<button onclick="selTok()" style="flex:1;background:#1a7a42;color:#fff;border:none;border-radius:8px;padding:12px;font-family:DM Sans,sans-serif;font-size:14px;font-weight:600;cursor:pointer">Alles selecteren</button>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:#c0e4d2;color:#0a2818;border:none;border-radius:8px;padding:12px 16px;font-family:DM Sans,sans-serif;font-size:14px;cursor:pointer">Sluiten</button>'
+    +'</div></div>';
   document.body.appendChild(modal);
-  // Auto-select na korte delay
-  setTimeout(()=>{
-    const el=document.getElementById('tok-display');
-    if(el){
-      const range=document.createRange();
-      range.selectNodeContents(el);
-      const sel=window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-  }, 300);
 }
 function selTok(){
   const ta=document.getElementById('tok-area');
@@ -1138,77 +1133,68 @@ function saveKeys(){
 function clearCache(){if(!confirm('E-maildata wissen?'))return;inbox=[];spam=[];localStorage.removeItem('mr_sp');renderInbox();renderSpam();badges();toast('Cache gewist');}
 
 // ══════════════════════════════════
-// PUSH MELDINGEN (Web Notifications)
+// PUSH MELDINGEN (FCM)
 // ══════════════════════════════════
+let fcmMessaging = null;
 
 function saveFCM(){
-  toast('Firebase is al geconfigureerd ✓');
+  // Lees velden — als leeg, gebruik bestaande C waarden (defaults)
+  const v = (qs('#s-vapid')||{}).value||'';
+  const cfgRaw = (qs('#s-fcm-cfg')||{}).value||'';
+  if(v.trim()) C.fcmVapid = v.trim();
+  if(cfgRaw.trim()){
+    try{
+      const parsed = JSON.parse(cfgRaw.trim());
+      C.fcmCfg = JSON.stringify(parsed);
+    }catch(e){
+      // Misschien al een JSON string — gewoon opslaan als het er geldig uitziet
+      if(cfgRaw.includes('apiKey')) C.fcmCfg = cfgRaw.trim();
+      else { toast('❌ Firebase JSON ongeldig'); return; }
+    }
+  }
+  saveC();
+  toast('Opgeslagen ✓ — tik nu op Inschakelen');
 }
 
-async function initPushPermission(){
-  if(!('Notification' in window)){ toast('❌ Meldingen worden niet ondersteund door deze browser'); return false; }
-  if(Notification.permission === 'granted') return true;
-  if(Notification.permission === 'denied'){ toast('❌ Meldingen geblokkeerd — sta toe via browserinstellingen'); return false; }
-  const perm = await Notification.requestPermission();
-  return perm === 'granted';
+async function initFCM(){
+  if(!C.fcmCfg || !C.fcmVapid) return false;
+  try{
+    let cfg;
+    try{ cfg = JSON.parse(C.fcmCfg); }catch(e){ return false; }
+    if(typeof firebase === 'undefined'){ toast('❌ Firebase SDK niet geladen — controleer internetverbinding'); return false; }
+    if(!firebase.apps.length) firebase.initializeApp(cfg);
+    fcmMessaging = firebase.messaging();
+    return true;
+  }catch(e){ console.error('FCM init fout:',e); return false; }
 }
 
 async function enablePush(){
-  toast('⏳ Firebase starten...');
-
-  // Zorg dat defaults geladen zijn
+  // Zorg dat C altijd de defaults heeft als velden leeg zijn
   if(!C.fcmVapid) C.fcmVapid = DEFAULT_FCM_VAPID;
   if(!C.fcmCfg)   C.fcmCfg   = DEFAULT_FCM_CFG;
+  saveC();
 
-  // Init Firebase als nog niet gedaan
   if(!fcmMessaging){
-    try{
-      let cfg;
-      try{ cfg = JSON.parse(C.fcmCfg); }catch(e){ toast('❌ Firebase config ongeldig'); return; }
-      if(typeof firebase === 'undefined'){ toast('❌ Firebase SDK niet geladen'); return; }
-      if(!firebase.apps.length) firebase.initializeApp(cfg);
-      fcmMessaging = firebase.messaging();
-    }catch(e){ toast('❌ Firebase fout: '+e.message); console.error(e); return; }
+    const ok = await initFCM();
+    if(!ok){ toast('❌ Firebase start mislukt — zie console'); return; }
   }
-
-  // Vraag toestemming
-  toast('⏳ Toestemming vragen...');
-  const ok = await initPushPermission();
-  if(!ok) return;
-
-  // Haal FCM token op
   try{
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted'){ toast('❌ Toestemming geweigerd — sta meldingen toe'); return; }
     const token = await fcmMessaging.getToken({ vapidKey: C.fcmVapid });
-    if(!token){ toast('⚠️ Geen token — probeer opnieuw'); return; }
-
-    // Sla token op in Firebase DB zodat de Cloudflare Worker hem kan gebruiken
-    await saveFCMTokenToDB(token);
-
-    C.pushToken = token; C.pushEnabled = true; saveC();
-    updatePushUI();
-    toast('🔔 Meldingen ingeschakeld ✓');
-    // Test melding
-    setTimeout(()=>{
-      new Notification('MailRob 🔔', { body: 'Meldingen werken! Je krijgt bericht bij nieuwe e-mail.', icon: './icon-192.png' });
-    }, 600);
+    if(token){
+      C.pushToken = token; C.pushEnabled = true; saveC();
+      updatePushUI();
+      toast('🔔 Meldingen ingeschakeld ✓');
+    } else {
+      toast('⚠️ Geen token — controleer Firebase project instellingen');
+    }
   }catch(e){ toast('❌ '+e.message); console.error(e); }
 }
 
-async function saveFCMTokenToDB(token){
-  // Sla FCM token op in Firebase Realtime Database (voor Cloudflare Worker)
-  try{
-    const dbUrl = 'https://siebes-wereld-default-rtdb.europe-west1.firebasedatabase.app/mailrob/fcm_token.json';
-    await fetch(dbUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(token)
-    });
-    console.log('FCM token opgeslagen in DB');
-  }catch(e){ console.warn('Token opslaan in DB mislukt:', e.message); }
-}
-
 async function disablePush(){
-  C.pushEnabled = false; saveC();
+  try{ if(fcmMessaging) await fcmMessaging.deleteToken(); }catch(e){}
+  C.pushEnabled = false; C.pushToken = ''; saveC();
   updatePushUI(); toast('Meldingen uitgeschakeld');
 }
 
@@ -1221,46 +1207,35 @@ function updatePushUI(){
   const btn = qs('#push-btn');
   const status = qs('#push-status');
   if(!btn || !status) return;
-  const supported = 'Notification' in window;
-  if(!supported){
-    status.textContent = '❌ Niet ondersteund door browser';
-    btn.style.display = 'none';
-    return;
-  }
-  if(C.pushEnabled && Notification.permission === 'granted'){
+  if(C.pushEnabled){
     status.textContent = '✅ Ingeschakeld';
     status.style.color = 'var(--teal)';
     btn.textContent = 'Uitschakelen';
     btn.style.background = 'var(--danger)';
   } else {
-    if(Notification.permission === 'denied'){
-      status.textContent = '❌ Geblokkeerd in browserinstellingen';
-      status.style.color = 'var(--danger)';
-      btn.textContent = 'Hoe toestaan?';
-      btn.style.background = 'var(--warn)';
-      btn.onclick = ()=>toast('Ga naar browserinstellingen → Meldingen → siebes-wereld.web.app → Toestaan');
-      return;
-    }
     status.textContent = 'Niet ingeschakeld';
     status.style.color = '';
     btn.textContent = 'Inschakelen';
     btn.style.background = 'var(--teal)';
-    btn.onclick = togglePush;
   }
+  // Pre-fill saved values
+  if(C.fcmVapid && qs('#s-vapid')) qs('#s-vapid').value = C.fcmVapid;
+  if(C.fcmCfg && qs('#s-fcm-cfg')) qs('#s-fcm-cfg').value = C.fcmCfg;
 }
 
-// Meldingen tonen voor nieuwe e-mails
+// Meldingen tonen voor nieuwe e-mails (foreground)
 function notifyNewEmails(newMails){
-  if(!C.pushEnabled) return;
+  if(!C.pushEnabled || !fcmMessaging) return;
   if(!newMails || !newMails.length) return;
-  if(Notification.permission !== 'granted') return;
-  // Groepeer meerdere mails in 1 melding
-  if(newMails.length === 1){
-    const e = newMails[0];
-    new Notification('📧 '+e.from, { body: e.sub, icon: './icon-192.png', tag: 'mailrob-new' });
-  } else {
-    new Notification('📧 '+newMails.length+' nieuwe e-mails', { body: newMails.map(e=>e.from).join(', '), icon: './icon-192.png', tag: 'mailrob-new' });
-  }
+  newMails.forEach(e=>{
+    if(Notification.permission==='granted'){
+      new Notification('📧 Nieuwe e-mail van '+e.from, {
+        body: e.sub,
+        icon: './icon-192.png',
+        tag: 'mailrob-'+e.id
+      });
+    }
+  });
 }
 
 // ══════════════════════════════════
