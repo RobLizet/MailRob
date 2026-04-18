@@ -225,7 +225,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <input type="text" class="fi" id="su-gid" placeholder="375463794423-en8arree30vmuloo9k13cr6uir0ra0he.apps.googleusercontent.com">
     <p style="font-size:11px;color:var(--sub);margin-top:4px;line-height:1.5">Één Client ID voor beide Gmail accounts</p>
   </div>
-  <button class="bp" onclick="saveSetup()" ontouchend="saveSetup();event.preventDefault()">Opslaan &amp; Starten →</button>
+  <button class="bp" onclick="saveSetup()" ontouchend="event.preventDefault();saveSetup();" ontouchstart="">Opslaan &amp; Starten →</button>
   <p class="sn">API keys worden lokaal opgeslagen op je iPhone.</p>
   <button onclick="hardReset()" style="margin-top:16px;background:none;border:none;color:var(--danger);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;text-decoration:underline;opacity:.7">Alles wissen en opnieuw beginnen</button>
 </div>
