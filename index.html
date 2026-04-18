@@ -523,12 +523,14 @@ function hardReset(){if(!confirm('Alles wissen?'))return;localStorage.clear();lo
 function saveC(){localStorage.setItem('mr_c',JSON.stringify(C));}
 function saveF(){localStorage.setItem('mr_fd',JSON.stringify(folders));localStorage.setItem('mr_fe',JSON.stringify(fEmails));}
 function prefSet(){
-  if(C.ant)qs('#s-ant').value=C.ant; if(C.gid)qs('#s-gid').value=C.gid; if(C.g1email&&qs('#s-mid'))qs('#s-mid').value=C.g1email;
-  if(C.ziggoEmail&&qs('#s-ziggo'))qs('#s-ziggo').value=C.ziggoEmail;
-  if(C.outlookEmail&&qs('#s-ol'))qs('#s-ol').value=C.outlookEmail;
-  qs('#tog-spam').className='tog'+(C.spamFilter?' on':'');
-  qs('#tog-ai').className='tog'+(C.aiEnabled?' on':'');
-  updatePushUI();
+  try{if(C.ant)qs('#s-ant').value=C.ant;}catch(e){}
+  try{if(C.gid)qs('#s-gid').value=C.gid;}catch(e){}
+  try{if(C.g1email&&qs('#s-mid'))qs('#s-mid').value=C.g1email;}catch(e){}
+  try{if(C.ziggoEmail&&qs('#s-ziggo'))qs('#s-ziggo').value=C.ziggoEmail;}catch(e){}
+  try{if(C.outlookEmail&&qs('#s-ol'))qs('#s-ol').value=C.outlookEmail;}catch(e){}
+  try{qs('#tog-spam').className='tog'+(C.spamFilter?' on':'');}catch(e){}
+  try{qs('#tog-ai').className='tog'+(C.aiEnabled?' on':'');}catch(e){}
+  try{updatePushUI();}catch(e){}
 }
 
 // ══════════════════════════════════
@@ -1218,6 +1220,7 @@ async function togglePush(){
 }
 
 function updatePushUI(){
+  try{
   const btn = qs('#push-btn');
   const status = qs('#push-status');
   if(!btn || !status) return;
