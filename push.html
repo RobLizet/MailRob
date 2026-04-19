@@ -27,7 +27,7 @@ button:active { opacity: 0.8; }
 </div>
 
 <script>
-const VAPID = 'BA4yH3oy3nqF2efakzjPH3g0Z3-bIGIxeIMCP7V7OrItdW0ft6kgdo5A_4VpMK9YKhH8GkvrlmxsEjnA65zK8s';
+const VAPID = 'BKFm4ULAB4FlH5ozX1PSQE0EUuylHdEoicWJX_gSPb3mjRsqUyvfn2Go5jHxIWJMGR21Y9XISQiiUPQ6nJTUdXM';
 const DB = 'https://siebes-wereld-default-rtdb.europe-west1.firebasedatabase.app/mailrob/push_sub.json';
 
 function log(msg, err) {
@@ -57,6 +57,17 @@ async function enable() {
     if (perm !== 'granted') { log('Toestemming geweigerd. Sta meldingen toe via browserinstellingen.', true); btn.disabled = false; btn.textContent = 'Opnieuw proberen'; return; }
 
     log('Service worker laden...');
+    // Registreer service worker als dat nog niet gedaan is
+    if (!navigator.serviceWorker.controller) {
+      await navigator.serviceWorker.register('./sw.js');
+      // Wacht tot actief
+      await new Promise(resolve => {
+        const sw = navigator.serviceWorker;
+        if (sw.controller) { resolve(); return; }
+        sw.addEventListener('controllerchange', resolve, {once: true});
+        setTimeout(resolve, 3000); // max 3 sec wachten
+      });
+    }
     const reg = await navigator.serviceWorker.ready;
 
     log('Abonnement aanmaken...');
