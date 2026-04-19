@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MailRob Meldingen</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #b2e8cc; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+.card { background: #d8f5e8; border-radius: 16px; padding: 30px; max-width: 400px; width: 100%; text-align: center; }
+h1 { font-size: 24px; color: #0a2818; margin-bottom: 10px; }
+p { font-size: 14px; color: #1e5c3a; margin-bottom: 24px; line-height: 1.6; }
+button { background: #1a7a42; color: white; border: none; border-radius: 12px; padding: 18px; font-size: 18px; font-weight: 700; width: 100%; margin-bottom: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:active { opacity: 0.8; }
+#status { font-size: 14px; color: #1a7a42; margin-top: 16px; min-height: 40px; line-height: 1.6; }
+#status.error { color: #cc2200; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div style="font-size:48px;margin-bottom:16px">🔔</div>
+  <h1>Meldingen inschakelen</h1>
+  <p>Tik op de knop om meldingen in te schakelen voor nieuwe e-mails in MailRob.</p>
+  <button id="btn" onclick="enable()">Inschakelen</button>
+  <a href="https://roblizet.github.io/MailRob/" style="display:block;color:#1a7a42;font-size:14px;margin-top:8px">← Terug naar MailRob</a>
+  <div id="status"></div>
+</div>
+
+<script>
+const VAPID = 'BA4yH3oy3nqF2efakzjPH3g0Z3-bIGIxeIMCP7V7OrItdW0ft6kgdo5A_4VpMK9YKhH8GkvrlmxsEjnA65zK8s';
+const DB = 'https://siebes-wereld-default-rtdb.europe-west1.firebasedatabase.app/mailrob/push_sub.json';
+
+function log(msg, err) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = err ? 'error' : '';
+  console.log(msg);
+}
+
+function urlBase64ToUint8Array(b) {
+  const pad = '='.repeat((4 - b.length % 4) % 4);
+  const base64 = (b + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+async function enable() {
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  btn.textContent = 'Bezig...';
+
+  try {
+    log('Toestemming vragen...');
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { log('Toestemming geweigerd. Sta meldingen toe via browserinstellingen.', true); btn.disabled = false; btn.textContent = 'Opnieuw proberen'; return; }
+
+    log('Service worker laden...');
+    const reg = await navigator.serviceWorker.ready;
+
+    log('Abonnement aanmaken...');
+    const old = await reg.pushManager.getSubscription();
+    if (old) await old.unsubscribe();
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID)
+    });
+
+    log('Opslaan...');
+    const subJson = JSON.stringify(sub.toJSON());
+    const r = await fetch(DB, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(subJson)
+    });
+
+    if (!r.ok) { log('Opslaan mislukt: ' + r.status, true); return; }
+
+    // Sla ook op in localStorage voor MailRob
+    try {
+      const c = JSON.parse(localStorage.getItem('mr_c') || '{}');
+      c.pushEnabled = true;
+      c.pushSub = subJson;
+      localStorage.setItem('mr_c', JSON.stringify(c));
+    } catch(e) {}
+
+    log('✅ Meldingen ingeschakeld! Je kunt terug naar MailRob.');
+    btn.textContent = '✅ Klaar!';
+
+    setTimeout(() => {
+      new Notification('MailRob 🔔', { body: 'Meldingen werken!', icon: 'https://roblizet.github.io/MailRob/icon-192.png' });
+    }, 500);
+
+  } catch(e) {
+    log('Fout: ' + e.message, true);
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = 'Opnieuw proberen';
+  }
+}
+</script>
+</body>
+</html>
