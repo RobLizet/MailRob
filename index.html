@@ -100,7 +100,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
 .sb2{padding:8px 14px;border-radius:9px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none}
 
 /* ─── ACCOUNT FILTER BAR ─────────────── */
-.ifbar{display:flex;gap:8px;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;position:sticky;top:0;z-index:5;overflow-x:auto;scrollbar-width:none}
+.ifbar{display:flex;gap:8px;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
 .ifbar::-webkit-scrollbar{display:none}
 .ifbtn{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;color:var(--sub);background:var(--bg2);border:1px solid var(--border);transition:all .15s;white-space:nowrap}
 .ifbtn .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -306,19 +306,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
   </div>
   <div class="hdr">
     <div class="ht" id="hdrtitle">Inbox <span id="ubadge" style="display:none"></span></div>
-    <div style="font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.3px;flex-shrink:0;margin-right:2px">v1.2</div>
+    <div id="ver-badge" style="font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.3px;flex-shrink:0;margin-right:2px"></div>
     <div class="hb" id="hbref" onclick="refreshEmails()">⟳</div>
     <div class="hb" id="hbsel" onclick="toggleSel()">☑️</div>
     <div class="hb" onclick="openCompose()">✏️</div>
   </div>
+  <div class="ifbar" id="ifbar-wrap">
+    <div class="ifbtn on-all" id="if-all" onclick="setFilter('all')"><div class="dot" style="background:var(--text)"></div>Alle mail</div>
+    <div class="ifbtn" id="if-gmail" onclick="setFilter('gmail')"><div class="dot" style="background:var(--gmail)"></div>Gmail</div>
+    <div class="ifbtn" id="if-ziggo" onclick="setFilter('ziggo')"><div class="dot" style="background:var(--ziggo)"></div>Ziggo</div>
+    <div class="ifbtn" id="if-ol" onclick="setFilter('ol')"><div class="dot" style="background:var(--outlook)"></div>Outlook</div>
+  </div>
   <div class="content">
     <div class="tab active" id="tab-inbox">
-      <div class="ifbar">
-        <div class="ifbtn on-all" id="if-all" onclick="setFilter('all')"><div class="dot" style="background:var(--text)"></div>Alle mail</div>
-        <div class="ifbtn" id="if-gmail" onclick="setFilter('gmail')"><div class="dot" style="background:var(--gmail)"></div>Gmail</div>
-        <div class="ifbtn" id="if-ziggo" onclick="setFilter('ziggo')"><div class="dot" style="background:var(--ziggo)"></div>Ziggo</div>
-        <div class="ifbtn" id="if-ol" onclick="setFilter('ol')"><div class="dot" style="background:var(--outlook)"></div>Outlook</div>
-      </div>
       <div id="inbox-body"></div>
     </div>
     <div class="tab" id="tab-sent"><div id="sent-body"><div class="spw"><div class="spin"></div><span>Laden...</span></div></div></div>
@@ -365,7 +365,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
       <div class="sset">
         <div class="srow"><div class="slb">E-mails wissen</div><button class="bcn bdis" onclick="clearCache()">Wissen</button></div>
       </div>
-      <div class="footer">Made by Rob Borghouts 2026 · v1.2</div>
+      <div class="footer">Made by Rob Borghouts 2026 · <span id="ver-footer"></span></div>
     </div>
   </div>
 
@@ -466,6 +466,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
 
 <script>
 'use strict';
+const VERSION = 'v1.3';
 const REDIR = location.origin + location.pathname;
 const GSCOPE = 'https://mail.google.com/';
 const DEFAULT_GID = '375463794423-en8arree30vmuloo9k13cr6uir0ra0he.apps.googleusercontent.com';
@@ -508,6 +509,8 @@ function init(){
   try{const s=localStorage.getItem('mr_fe');if(s)fEmails=JSON.parse(s);}catch(e){}
   if(!folders.length) folders=[...DFOLDERS];
   checkExp(); initPWA();
+  qs('#ver-badge').textContent = VERSION;
+  const vf = qs('#ver-footer'); if(vf) vf.textContent = VERSION;
   if(!C.ant&&!C.gid){qs('#setup').style.display='flex';}
   else{startApp();}
   if(C.fcmCfg&&C.fcmVapid) initFCM();
@@ -1058,6 +1061,8 @@ function goTab(t){
   qs('#hdrtitle').innerHTML=TLBLS[t]+(t==='inbox'?'<span id="ubadge"'+(u>0?'':' style="display:none"')+'>'+u+'</span>':'');
   qs('#hbref').style.display=t==='inbox'?'flex':'none';
   qs('#hbsel').style.display=['inbox','sent','trash','spam'].includes(t)?'flex':'none';
+  const ifbar=qs('#ifbar-wrap');
+  if(ifbar) ifbar.style.display=t==='inbox'?'flex':'none';
   if(!['inbox','sent','trash','spam'].includes(t))cancelSel();
   if(t==='sent')loadSent();
   if(t==='trash')loadTrash();
