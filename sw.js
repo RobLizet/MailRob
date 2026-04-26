@@ -1,5 +1,5 @@
-// MailRob – Service Worker v2026 (met Push Meldingen)
-const CACHE = "mailrob-v2";
+// MailRob – Service Worker v1.4
+const CACHE = "mailrob-v4";
 const ASSETS = ["./index.html","./manifest.json","./icon-192.png","./icon-512.png","./icon-maskable-512.png"];
 
 self.addEventListener("install", e => {
@@ -19,6 +19,17 @@ self.addEventListener("fetch", e => {
   if (url.includes("googleapis.com") || url.includes("anthropic.com") ||
       url.includes("accounts.google.com") || url.includes("fonts.gstatic.com") ||
       url.includes("firebaseapp.com") || url.includes("fcm.googleapis.com")) return;
+  // Network first voor index.html zodat updates altijd doorkomen
+  if (url.includes("index.html") || url.endsWith("/")) {
+    e.respondWith(
+      fetch(e.request).then(r => {
+        const clone = r.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return r;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
   e.respondWith(caches.match(e.request).then(c => c || fetch(e.request)));
 });
 
