@@ -78,7 +78,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
 .sn{font-size:11px;color:var(--sub);text-align:center;max-width:380px;line-height:1.6;margin-top:8px}
 
 /* ─── APP SHELL ──────────────────────── */
-#app{display:none;flex-direction:column;height:100%;padding-top:var(--st);padding-bottom:calc(var(--nh)+var(--sb))}
+#app{display:none;flex-direction:column;position:fixed;inset:0;padding-top:var(--st);padding-bottom:calc(var(--nh)+var(--sb))}
 
 /* ─── HEADER ─────────────────────────── */
 .hdr{height:var(--hh);display:flex;align-items:center;padding:0 16px;gap:10px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;position:relative}
@@ -110,7 +110,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
 .ifbtn.on-ol{background:var(--outlook-bg);color:var(--outlook);border-color:var(--outlook-border)}
 
 /* ─── CONTENT ────────────────────────── */
-.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
 .tab{display:none}.tab.active{display:block}
 
 /* ─── MAIL ITEMS ─────────────────────── */
