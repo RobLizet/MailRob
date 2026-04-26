@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MailRob">
 <meta name="mobile-web-app-capable" content="yes"/>
-<meta name="theme-color" content="#0d0f14"/>
+<meta name="theme-color" content="#dff0fb"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="apple-touch-icon" href="icon-512.png"/>
@@ -23,36 +23,36 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
 :root{
-  /* Dark base */
-  --bg:#0d0f14;
-  --bg2:#141720;
-  --bg3:#1c2030;
-  --bg4:#232840;
-  --border:#2a2f45;
-  --border2:#353c58;
+  /* Light blue base */
+  --bg:#dff0fb;
+  --bg2:#eaf6fd;
+  --bg3:#f2faff;
+  --bg4:#ffffff;
+  --border:#b8ddf0;
+  --border2:#94cce6;
 
   /* Accents */
-  --text:#eef0f8;
-  --sub:#6b7299;
-  --dim:#4a5070;
+  --text:#0d1f2d;
+  --sub:#3a6178;
+  --dim:#6a97af;
 
   /* Account colors */
-  --gmail:#EA4335;
-  --gmail-bg:rgba(234,67,53,.12);
-  --gmail-border:rgba(234,67,53,.25);
-  --ziggo:#00b050;
-  --ziggo-bg:rgba(0,176,80,.12);
-  --ziggo-border:rgba(0,176,80,.25);
-  --outlook:#0078D4;
-  --outlook-bg:rgba(0,120,212,.12);
-  --outlook-border:rgba(0,120,212,.25);
+  --gmail:#d93025;
+  --gmail-bg:rgba(217,48,37,.10);
+  --gmail-border:rgba(217,48,37,.28);
+  --ziggo:#0a8a3c;
+  --ziggo-bg:rgba(10,138,60,.10);
+  --ziggo-border:rgba(10,138,60,.28);
+  --outlook:#0062b1;
+  --outlook-bg:rgba(0,98,177,.10);
+  --outlook-border:rgba(0,98,177,.28);
 
   /* UI */
-  --accent:#7c6cfa;
-  --accent-glow:rgba(124,108,250,.2);
-  --danger:#ff4d4d;
-  --warn:#f59e0b;
-  --ok:#22c55e;
+  --accent:#1565c0;
+  --accent-glow:rgba(21,101,192,.15);
+  --danger:#c62828;
+  --warn:#e65100;
+  --ok:#2e7d32;
 
   --r:12px;
   --nh:68px;
@@ -150,11 +150,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
 .selmode .udot{display:none}
 
 /* ─── BOTTOM NAV ─────────────────────── */
-.bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nh)+var(--sb));padding-bottom:var(--sb);background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:20}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--dim);padding:8px 4px;transition:color .15s;position:relative}
-.ni.on{color:var(--accent)}
-.ni svg{width:22px;height:22px;stroke-width:1.7}
-.ni span{font-size:10px;font-weight:500}
+.bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nh)+var(--sb));padding-bottom:var(--sb);background:#ffffff;border-top:2px solid var(--border2);display:flex;z-index:20;box-shadow:0 -2px 12px rgba(0,0,0,.10)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:#6a97af;padding:8px 4px;transition:color .15s;position:relative}
+.ni.on{color:#1565c0}
+.ni svg{width:22px;height:22px;stroke-width:1.9}
+.ni span{font-size:10px;font-weight:700;letter-spacing:.2px}
 .nibadge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--accent);color:#fff;border-radius:8px;font-size:9px;font-weight:700;padding:1px 5px;display:none;min-width:16px;text-align:center}
 
 /* ─── FOLDERS ────────────────────────── */
@@ -262,14 +262,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
 @keyframes rot{to{transform:rotate(360deg)}}
 
 /* Toast */
-#toast{position:fixed;bottom:calc(var(--nh)+var(--sb)+14px);left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:22px;padding:11px 22px;font-size:13px;font-weight:500;z-index:300;transition:transform .3s cubic-bezier(.22,.68,0,1.2);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+#toast{position:fixed;bottom:calc(var(--nh)+var(--sb)+14px);left:50%;transform:translateX(-50%) translateY(80px);background:#0d1f2d;border:1px solid #1565c0;color:#fff;border-radius:22px;padding:11px 22px;font-size:13px;font-weight:600;z-index:300;transition:transform .3s cubic-bezier(.22,.68,0,1.2);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.25)}
 #toast.show{transform:translateX(-50%) translateY(0)}
 
 .footer{text-align:center;padding:28px;font-size:11px;color:var(--dim);opacity:.5}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
 /* ─── UNREAD INDICATOR ───────────────── */
-.mi.unread{background:var(--bg2)}
+.mi.unread{background:#ffffff}
 .mi.unread .mfrom{color:var(--text);font-weight:700}
 .mi.unread .msub{color:var(--text);font-weight:600}
 </style>
@@ -306,6 +306,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
   </div>
   <div class="hdr">
     <div class="ht" id="hdrtitle">Inbox <span id="ubadge" style="display:none"></span></div>
+    <div style="font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.3px;flex-shrink:0;margin-right:2px">v1.2</div>
     <div class="hb" id="hbref" onclick="refreshEmails()">⟳</div>
     <div class="hb" id="hbsel" onclick="toggleSel()">☑️</div>
     <div class="hb" onclick="openCompose()">✏️</div>
@@ -364,7 +365,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
       <div class="sset">
         <div class="srow"><div class="slb">E-mails wissen</div><button class="bcn bdis" onclick="clearCache()">Wissen</button></div>
       </div>
-      <div class="footer">Made by Rob Borghouts 2026</div>
+      <div class="footer">Made by Rob Borghouts 2026 · v1.2</div>
     </div>
   </div>
 
@@ -1159,10 +1160,10 @@ async function initFCM(){
 
 // ── PWA ────────────────────────────────
 function initPWA(){
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#0d0f14"/><rect x="72" y="144" width="368" height="244" rx="24" fill="none" stroke="#7c6cfa" stroke-width="22"/><polyline points="72,168 256,288 440,168" fill="none" stroke="#7c6cfa" stroke-width="22"/></svg>';
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="110" fill="#1565c0"/><rect x="72" y="144" width="368" height="244" rx="24" fill="none" stroke="#ffffff" stroke-width="22"/><polyline points="72,168 256,288 440,168" fill="none" stroke="#ffffff" stroke-width="22"/></svg>';
   const icon='data:image/svg+xml;base64,'+btoa(svg);
   qs('#pwa-icon').href=icon;
-  const mf={name:'MailRob',short_name:'MailRob',display:'standalone',orientation:'portrait',background_color:'#0d0f14',theme_color:'#0d0f14',start_url:location.pathname,icons:[{src:icon,sizes:'512x512',type:'image/svg+xml'}]};
+  const mf={name:'MailRob',short_name:'MailRob',display:'standalone',orientation:'portrait',background_color:'#dff0fb',theme_color:'#dff0fb',start_url:location.pathname,icons:[{src:icon,sizes:'512x512',type:'image/svg+xml'}]};
   qs('#manifest-link').href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(mf));
   qs('#manifest-link').rel='manifest';
 }
