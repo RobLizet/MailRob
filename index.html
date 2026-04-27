@@ -17,8 +17,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" async></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js" async></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
@@ -466,7 +466,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
 
 <script>
 'use strict';
-const VERSION = 'v1.4';
+const VERSION = 'v1.5';
 const REDIR = location.origin + location.pathname;
 const GSCOPE = 'https://mail.google.com/';
 const DEFAULT_GID = '375463794423-en8arree30vmuloo9k13cr6uir0ra0he.apps.googleusercontent.com';
@@ -486,6 +486,7 @@ let selMode=false, selected=new Set(), inboxFilter='all', pendingN=null;
 
 // ── INIT ─────────────────────────────
 function init(){
+  try{
   if(location.search.includes('reset')){
     const saved=localStorage.getItem('mr_c');
     localStorage.clear();
@@ -508,14 +509,14 @@ function init(){
   try{const s=localStorage.getItem('mr_fd');if(s)folders=JSON.parse(s);}catch(e){folders=[...DFOLDERS];}
   try{const s=localStorage.getItem('mr_fe');if(s)fEmails=JSON.parse(s);}catch(e){}
   if(!folders.length) folders=[...DFOLDERS];
-  checkExp(); initPWA();
-  qs('#ver-badge').textContent = VERSION;
-  const vf = qs('#ver-footer'); if(vf) vf.textContent = VERSION;
-  if(!C.ant&&!C.gid){qs('#setup').style.display='flex';}
-  else{startApp();}
-  if(C.fcmCfg&&C.fcmVapid) initFCM();
+  try{checkExp();}catch(e){}
+  try{initPWA();}catch(e){}
+  try{qs('#ver-badge').textContent=VERSION; const vf=qs('#ver-footer');if(vf)vf.textContent=VERSION;}catch(e){}
+  if(!C.ant&&!C.gid&&!C.g1email){qs('#setup').style.display='flex';}
+  else{try{startApp();}catch(e){console.error('startApp fout:',e);}}
+  setTimeout(()=>{try{if(C.fcmCfg&&C.fcmVapid)initFCM();}catch(e){}},2000);
   setInterval(checkExp,60000);
-  setInterval(()=>{if(C.g1tok&&C.pushEnabled)fetchEmails();},3*60*1000);
+  setInterval(()=>{try{if(C.g1tok&&C.pushEnabled)fetchEmails();}catch(e){}},3*60*1000);
   let touchMoved=false;
   document.addEventListener('touchstart',()=>{touchMoved=false;},true);
   document.addEventListener('touchmove',()=>{touchMoved=true;},true);
@@ -533,6 +534,16 @@ function init(){
     const id=card.dataset.eid;
     if(selMode){toggleSelItem(id);}else{openEmail(id);}
   });
+  }catch(e){
+    console.error('Init crash:',e);
+    // Toon noodknop als alles vastloopt
+    document.body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;padding:24px;font-family:sans-serif;background:#dff0fb">'
+      +'<div style="font-size:48px">⚠️</div>'
+      +'<div style="font-size:18px;font-weight:700;color:#0d1f2d">MailRob crashte</div>'
+      +'<div style="font-size:13px;color:#3a6178;text-align:center">'+e.message+'</div>'
+      +'<button onclick="localStorage.clear();location.reload()" style="background:#1565c0;color:#fff;border:none;border-radius:12px;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer">Alles wissen &amp; herstarten</button>'
+      +'</div>';
+  }
 }
 
 function checkExp(){
@@ -603,7 +614,7 @@ function updateUI(){
 // ── FETCH EMAILS ───────────────────────
 async function fetchEmails(){
   if(!C.g1tok){
-    qs('#inbox-body').innerHTML='<div class="empty"><div class="eico">📭</div><div class="et">Geen accounts verbonden</div><div class="es">Ga naar Instellingen</div></div>';
+    qs('#inbox-body').innerHTML='<div class="empty"><div class="eico">📭</div><div class="et">Geen accounts verbonden</div><div class="es"><button onclick="connectG(1)" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-family:\'Outfit\',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Gmail verbinden →</button></div></div>';
     return;
   }
   qs('#inbox-body').innerHTML='<div class="spw"><div class="spin"></div><span>E-mails ophalen...</span></div>';
@@ -654,7 +665,10 @@ async function fetchFolder(src,tok,label){
 
 async function gf(url,tok,n){
   try{
-    const r=await fetch(url,{headers:{Authorization:'Bearer '+tok}});
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),10000);
+    const r=await fetch(url,{headers:{Authorization:'Bearer '+tok},signal:controller.signal});
+    clearTimeout(timer);
     if(r.status===401){if(n===1){C.g1tok=null;}else{C.g2tok=null;}saveC();updateUI();checkExp();return null;}
     return r.ok?r.json():null;
   }catch(e){return null;}
@@ -1182,7 +1196,7 @@ function toast(msg){const t=qs('#toast');t.textContent=msg;t.classList.add('show
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{navigator.serviceWorker.register("./sw.js").catch(()=>{});});
 }
-init();
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
