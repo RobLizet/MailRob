@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-title" content="MailRob">
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="theme-color" content="#dff0fb"/>
-<link rel="manifest" href="manifest.json"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="apple-touch-icon" href="icon-512.png"/>
 <link rel="apple-touch-icon" id="pwa-icon">
@@ -1095,8 +1094,11 @@ function copyToken(){
     +'<textarea style="width:100%;height:100px;background:#0d0f14;color:#7c6cfa;border:1px solid var(--border2);border-radius:9px;padding:10px;font-family:monospace;font-size:11px;resize:none" id="tok-area">'+txt+'</textarea>'
     +'<div style="margin-top:12px;display:flex;gap:8px">'
     +'<button onclick="selTok()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px;font-family:Outfit,sans-serif;font-size:14px;font-weight:700;cursor:pointer">Alles selecteren</button>'
-    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:var(--bg3);color:var(--sub);border:1px solid var(--border);border-radius:9px;padding:12px 16px;font-family:Outfit,sans-serif;font-size:14px;cursor:pointer">Sluiten</button>'
+    +'<button style="background:var(--bg3);color:var(--sub);border:1px solid var(--border);border-radius:9px;padding:12px 16px;font-family:Outfit,sans-serif;font-size:14px;cursor:pointer">Sluiten</button>'
     +'</div></div>';
+  const closeBtn=modal.querySelector('button:last-of-type');
+  closeBtn.addEventListener('click',()=>modal.remove());
+  modal.addEventListener('click',(e)=>{if(e.target===modal)modal.remove();});
   document.body.appendChild(modal);
 }
 function selTok(){const ta=document.getElementById('tok-area');if(ta){ta.focus();ta.select();}}
@@ -1173,8 +1175,15 @@ async function initFCM(){
   try{
     let cfg;try{cfg=JSON.parse(C.fcmCfg);}catch(e){return false;}
     if(!firebase.apps.length) firebase.initializeApp(cfg);
-    fcmMessaging=firebase.messaging();return true;
-  }catch(e){return false;}
+    fcmMessaging=firebase.messaging();
+    fcmMessaging.onMessage((payload)=>{
+      console.log('FCM bericht ontvangen:',payload);
+      if(payload.notification){
+        new Notification(payload.notification.title||'MailRob',{body:payload.notification.body||'Nieuwe melding',icon:'./icon-192.png',tag:'mailrob-fcm',renotify:true});
+      }
+    });
+    return true;
+  }catch(e){console.error('FCM init fout:',e);return false;}
 }
 
 // ── PWA ────────────────────────────────

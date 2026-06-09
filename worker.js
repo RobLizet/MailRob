@@ -1,4 +1,4 @@
-// MailRob – Cloudflare Worker (Web Push)
+// MailRob – Cloudflare Worker (Web Push) – FIXED v2
 // Draait elke 5 minuten, stuurt push bij nieuwe e-mail
 
 const VAPID_PUBLIC    = 'BEtZX7FIeg8N3vnLSsCbrQN8Of2mJukKovMXzqqerfauRHjPQiau3B2i5f_rfoa2jf76i-RAhmPDQxUkxEu2ov8';
@@ -31,10 +31,16 @@ async function checkAndNotify(env) {
     if (!emails.length) { console.log('Geen ongelezen e-mails'); return; }
 
     const lastId = await getLastId(env);
-    const newEmails = lastId ? emails.filter(e => e.id > lastId) : emails.slice(0, 1);
+    // FIX #1 & #2: Proper numeric ID comparison
+    const newEmails = lastId 
+      ? emails.filter(e => parseInt(e.id) > parseInt(lastId)) 
+      : emails.slice(0, 1);
+    
     if (!newEmails.length) { console.log('Geen nieuwe sinds laatste check'); return; }
 
-    await saveLastId(env, emails[0].id);
+    // Save the highest ID we found
+    const maxId = Math.max(...emails.map(e => parseInt(e.id)));
+    await saveLastId(env, maxId.toString());
 
     for (const email of newEmails.slice(0, 3)) {
       await sendWebPush(env, sub, email);
@@ -68,7 +74,11 @@ async function getEmailDetail(token, id) {
   (m.payload?.headers || []).forEach(x => { h[x.name] = x.value; });
   const match = (h.From||'').match(/^(.*?)\s*<(.+)>$/) || [];
   const from = match[1] ? match[1].replace(/"/g,'').trim() : (match[2]||h.From||'Onbekend');
-  return { id: m.internalDate||m.id, from, subject: h.Subject||'(geen onderwerp)' };
+  
+  // FIX #2: Altijd internalDate gebruiken (timestamp in ms)
+  const emailId = m.internalDate || Math.floor(Date.now()).toString();
+  
+  return { id: emailId, from, subject: h.Subject||'(geen onderwerp)' };
 }
 
 async function getPushSub(env) {
